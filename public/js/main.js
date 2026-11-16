@@ -3,10 +3,12 @@
 import * as store from './store.js'
 import { initUI, closeTransient, focusSearch, createConcept, deleteSelection, openHelp, notify } from './ui.js'
 import { initMap } from './map.js'
+import { t, applyStaticTranslations } from './i18n.js'
 
 const bootEl = document.getElementById('boot')
 
 async function start() {
+  applyStaticTranslations()
   try {
     const res = await fetch('/api/state', { cache: 'no-store' })
     if (!res.ok) throw new Error('state')
@@ -34,14 +36,13 @@ function showBootError() {
   panel.className = 'boot__error'
   const title = document.createElement('p')
   title.className = 'boot__error-title'
-  title.textContent = 'Concept no pudo abrir tu mapa'
+  title.textContent = t('boot.errorTitle')
   const text = document.createElement('p')
   text.className = 'boot__error-text'
-  text.textContent =
-    'Comprueba que la ventana del servidor siga abierta y vuelve a intentarlo. Tus datos están en la carpeta data.'
+  text.textContent = t('boot.errorText')
   const button = document.createElement('button')
   button.className = 'btn btn--primary'
-  button.textContent = 'Reintentar'
+  button.textContent = t('boot.retry')
   button.addEventListener('click', () => window.location.reload())
   panel.append(title, text, button)
   const mark = document.createElement('svg')

@@ -1,19 +1,19 @@
 /* Concept — estado del mapa, historial y guardado en disco. */
 
 export const PALETTE = [
-  { name: 'Pino', value: '#2F6B57' },
-  { name: 'Ámbar', value: '#B0792B' },
-  { name: 'Índigo', value: '#5A6A94' },
-  { name: 'Terracota', value: '#A05A4C' },
-  { name: 'Verdigrís', value: '#4A7C86' },
-  { name: 'Malva', value: '#7C6490' },
+  { key: 'pine', value: '#2F6B57' },
+  { key: 'amber', value: '#B0792B' },
+  { key: 'indigo', value: '#5A6A94' },
+  { key: 'terracotta', value: '#A05A4C' },
+  { key: 'verdigris', value: '#4A7C86' },
+  { key: 'mauve', value: '#7C6490' },
 ]
 
 const MAX_HISTORY = 60
 const listeners = new Set()
 
 export const state = {
-  doc: { title: 'Sin título', concepts: [], links: [] },
+  doc: { title: '', concepts: [], links: [] },
   selection: null,
   selectedLink: null,
   focus: [],
@@ -91,7 +91,7 @@ export function normalize(raw) {
 
   return {
     version: 1,
-    title: typeof doc.title === 'string' && doc.title.trim() ? doc.title.trim().slice(0, 140) : 'Sin título',
+    title: typeof doc.title === 'string' ? doc.title.trim().slice(0, 140) : '',
     createdAt: doc.createdAt || new Date().toISOString(),
     updatedAt: doc.updatedAt || new Date().toISOString(),
     concepts: cleanConcepts,
@@ -252,7 +252,7 @@ export function flush() {
 /* --------------------------------------------------------------- títulos y consulta */
 
 export function setTitle(title) {
-  state.doc.title = title.trim() ? title.slice(0, 140) : 'Sin título'
+  state.doc.title = title.trim() ? title.slice(0, 140) : ''
   emit('title')
   scheduleSave()
 }

@@ -190,17 +190,17 @@ const server = createServer(async (req, res) => {
       const { data, name } = await readJson(req, 24 * 1024 * 1024)
       const match = /^data:(image\/[a-z+]+);base64,(.+)$/is.exec(String(data || ''))
       if (!match) {
-        json(res, 400, { error: 'Formato de imagen no válido' })
+        json(res, 400, { error: 'image-format' })
         return
       }
       const ext = IMAGE_EXT[match[1].toLowerCase()]
       if (!ext) {
-        json(res, 415, { error: 'Usa PNG, JPG, WEBP, GIF o AVIF' })
+        json(res, 415, { error: 'image-type' })
         return
       }
       const buffer = Buffer.from(match[2], 'base64')
       if (buffer.length > 18 * 1024 * 1024) {
-        json(res, 413, { error: 'La imagen supera los 18 MB' })
+        json(res, 413, { error: 'image-too-large' })
         return
       }
       const hash = createHash('sha1').update(buffer).digest('hex').slice(0, 16)
@@ -243,10 +243,10 @@ const server = createServer(async (req, res) => {
   } catch (err) {
     const status = err.status || 500
     if (status === 413) {
-      json(res, 413, { error: 'El archivo es demasiado grande' })
+      json(res, 413, { error: 'file-too-large' })
     } else {
       console.error('[concept]', err)
-      json(res, status, { error: 'Error interno del servidor' })
+      json(res, status, { error: 'server-error' })
     }
   }
 })

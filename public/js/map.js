@@ -2,8 +2,9 @@
 
 import * as store from './store.js'
 import { state } from './store.js'
-import { clamp, plural, uploadImage } from './utils.js'
+import { clamp, uploadImage } from './utils.js'
 import { zoomLabel, notify } from './ui.js'
+import { t } from './i18n.js'
 
 const NS = 'http://www.w3.org/2000/svg'
 const NODE_W = 236
@@ -144,8 +145,6 @@ function buildNode(concept, index) {
   const handle = document.createElement('button')
   handle.type = 'button'
   handle.className = 'node__handle'
-  handle.title = 'Arrastra para relacionar con otro concepto'
-  handle.setAttribute('aria-label', `Relacionar «${concept.title || 'concepto'}» con otro concepto`)
   handle.addEventListener('pointerdown', (event) => {
     event.stopPropagation()
     event.preventDefault()
@@ -191,10 +190,14 @@ function buildMedia(concept) {
   return media
 }
 
+function relationCount(n) {
+  return `${n} ${t(n === 1 ? 'relation.one' : 'relation.other')}`
+}
+
 function nodeLabel(concept) {
-  const title = concept.title.trim() || 'Concepto sin título'
+  const title = concept.title.trim() || t('concept.untitled')
   const n = store.linksOf(concept.id).length
-  return `${title}. ${plural(n, 'relación', 'relaciones')}.`
+  return `${title}. ${relationCount(n)}.`
 }
 
 function paintNode(el, concept) {
@@ -204,10 +207,15 @@ function paintNode(el, concept) {
   const title = el.querySelector('.node__title')
   const desc = el.querySelector('.node__desc')
   const meta = el.querySelector('.node__meta')
-  title.textContent = concept.title.trim() || 'Sin título'
+  const handle = el.querySelector('.node__handle')
+  title.textContent = concept.title.trim() || t('concept.untitledShort')
   desc.textContent = concept.description
   const n = store.linksOf(concept.id).length
-  meta.textContent = n ? `${n} ${plural(n, 'relación', 'relaciones').split(' ').slice(1).join(' ')}` : ''
+  meta.textContent = n ? relationCount(n) : ''
+  if (handle) {
+    handle.title = t('node.dragTitle')
+    handle.setAttribute('aria-label', t('node.dragAria', { title: concept.title.trim() || t('concept.untitled') }))
+  }
   el.querySelector('.node__spine').style.background = concept.color
 }
 
@@ -978,7 +986,7 @@ function onLinkUp() {
   clearLinking()
   if (!from || !target) return
   if (store.findLink(from, target)) {
-    notify('Estos conceptos ya están relacionados.')
+    notify(t('link.already'))
     return
   }
   store.addLink(from, target)
@@ -1025,7 +1033,7 @@ function bindImages() {
     els.drop.hidden = true
     const files = [...(event.dataTransfer?.files || [])].filter((file) => file.type.startsWith('image/'))
     if (!files.length) {
-      notify('Suelta una imagen en el mapa para añadirla.')
+      notify(t('toast.notImage'))
       return
     }
     const point = screenToWorld(event.clientX, event.clientY)
@@ -1041,7 +1049,9 @@ function bindImages() {
         notify(err.message)
       }
     }
-    if (index) notify(plural(index, 'imagen añadida', 'imágenes añadidas'))
+    if (index) {
+      notify(`${index} ${t(index === 1 ? 'toast.imageAddedOne' : 'toast.imagesAdded')}`)
+    }
     renderEdges()
   })
 
@@ -1098,6 +1108,12 @@ function bind() {
   })
 
   window.addEventListener('concept:new-concept', () => createConceptAt())
+  window.addEventListener('concept:language', () => {
+    for (const [id, el] of nodeEls) {
+      const concept = store.getConcept(id)
+      if (concept) paintNode(el, concept)
+    }
+  })
   window.addEventListener('concept:image', (event) => {
     addImageConcept(event.detail.url)
   })

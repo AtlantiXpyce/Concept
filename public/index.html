@@ -35,11 +35,11 @@
   </svg>
 
   <div class="app" id="app">
-    <aside class="rail" id="rail" aria-label="Índice del mapa">
+    <aside class="rail" id="rail" aria-label="Índice del mapa" data-i18n-aria="rail.aria">
       <div class="rail__brand">
         <svg class="brand__mark" aria-hidden="true"><use href="#i-mark"/></svg>
         <span class="brand__name">Concept</span>
-        <button class="icon-btn rail__close" id="rail-close" aria-label="Cerrar el índice">
+        <button class="icon-btn rail__close" id="rail-close" aria-label="Cerrar el índice" data-i18n-aria="rail.close" data-i18n-title="rail.close">
           <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
         </button>
       </div>
@@ -48,16 +48,16 @@
         <div class="rail__buttons">
           <button class="btn btn--primary rail__new" id="new-concept">
             <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
-            <span>Nuevo concepto</span>
+            <span data-i18n="rail.new">Nuevo concepto</span>
           </button>
-          <button class="btn btn--quiet btn--square" id="rail-image" title="Añadir una imagen al mapa" aria-label="Añadir una imagen al mapa">
+          <button class="btn btn--quiet btn--square" id="rail-image" title="Añadir una imagen al mapa" aria-label="Añadir una imagen al mapa" data-i18n-title="rail.addImage" data-i18n-aria="rail.addImage">
             <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
           </button>
         </div>
 
         <div class="search">
           <svg class="icon search__icon" aria-hidden="true"><use href="#i-search"/></svg>
-          <input id="search" type="search" placeholder="Buscar conceptos" autocomplete="off" spellcheck="false" aria-label="Buscar conceptos">
+          <input id="search" type="search" placeholder="Buscar conceptos" autocomplete="off" spellcheck="false" aria-label="Buscar conceptos" data-i18n-placeholder="rail.search" data-i18n-aria="rail.search">
           <kbd class="search__key">/</kbd>
         </div>
       </div>
@@ -68,18 +68,18 @@
           <span class="rail__count" id="concept-count">0</span>
         </div>
         <ul class="concept-list" id="concept-list"></ul>
-        <p class="rail__none" id="search-none" hidden>Ningún concepto coincide.</p>
+        <p class="rail__none" id="search-none" hidden data-i18n="rail.none">Ningún concepto coincide.</p>
       </div>
 
       <div class="rail__foot">
         <button class="ghost-btn" id="center-map">
           <svg class="icon" aria-hidden="true"><use href="#i-fit"/></svg>
-          <span>Centrar el mapa</span>
+          <span data-i18n="rail.center">Centrar el mapa</span>
           <kbd>0</kbd>
         </button>
         <button class="ghost-btn" id="open-help">
           <svg class="icon" aria-hidden="true"><use href="#i-machine"/></svg>
-          <span>Atajos y datos</span>
+          <span data-i18n="rail.help">Atajos y datos</span>
         </button>
       </div>
     </aside>
@@ -88,12 +88,12 @@
 
     <main class="stage" id="stage">
       <header class="topbar">
-        <button class="icon-btn rail__toggle" id="rail-toggle" aria-label="Abrir el índice">
+        <button class="icon-btn rail__toggle" id="rail-toggle" aria-label="Abrir el índice" data-i18n-aria="rail.open">
           <svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg>
         </button>
 
         <div class="doc" id="doc">
-          <input class="doc__title" id="doc-title" value="Sin título" aria-label="Nombre del mapa" spellcheck="false">
+          <input class="doc__title" id="doc-title" value="" placeholder="Sin título" aria-label="Nombre del mapa" spellcheck="false" data-i18n-placeholder="doc.untitled" data-i18n-aria="doc.name">
           <div class="doc__save" id="save-status" data-state="saved" title="Tus cambios se guardan en este equipo">
             <span class="save__dot"></span>
             <span id="save-text">Guardado</span>
@@ -101,25 +101,29 @@
         </div>
 
         <div class="focusbar" id="focusbar" hidden>
-          <button class="focusbar__back" id="focus-back" title="Volver al concepto anterior" aria-label="Volver al concepto anterior">
+          <button class="focusbar__back" id="focus-back" title="Volver al concepto anterior" aria-label="Volver al concepto anterior" data-i18n-title="focus.back" data-i18n-aria="focus.back">
             <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>
           </button>
           <div class="focusbar__text">
-            <span class="focusbar__label">En foco</span>
+            <span class="focusbar__label" data-i18n="focus.label">En foco</span>
             <strong class="focusbar__title" id="focus-title"></strong>
           </div>
           <span class="focusbar__count" id="focus-count"></span>
-          <button class="btn btn--quiet btn--sm" id="focus-exit">Ver el mapa completo</button>
+          <button class="btn btn--quiet btn--sm" id="focus-exit" data-short="Ver todo" data-i18n-short="focus.short"><span data-i18n="focus.exit">Ver el mapa completo</span></button>
         </div>
 
         <div class="viewtools">
-          <div class="zoom" role="group" aria-label="Zoom">
-            <button class="zoom__btn" id="zoom-out" aria-label="Alejar">−</button>
-            <button class="zoom__level" id="zoom-level" title="Volver al 100%">100%</button>
-            <button class="zoom__btn" id="zoom-in" aria-label="Acercar">+</button>
+          <div class="lang" role="group" aria-label="Idioma" data-i18n-aria="lang.aria">
+            <button class="lang__btn" type="button" data-lang="es" aria-pressed="true">ES</button>
+            <button class="lang__btn" type="button" data-lang="en" aria-pressed="false">EN</button>
           </div>
-          <button class="btn btn--quiet btn--sm viewtools__fit" id="fit-view">Ajustar</button>
-          <button class="icon-btn" id="menu-button" aria-label="Más opciones" aria-haspopup="menu">
+          <div class="zoom" role="group" aria-label="Zoom" data-i18n-aria="zoom.aria">
+            <button class="zoom__btn" id="zoom-out" aria-label="Alejar" data-i18n-aria="zoom.out">−</button>
+            <button class="zoom__level" id="zoom-level" title="Volver al 100%" data-i18n-title="zoom.reset">100%</button>
+            <button class="zoom__btn" id="zoom-in" aria-label="Acercar" data-i18n-aria="zoom.in">+</button>
+          </div>
+          <button class="btn btn--quiet btn--sm viewtools__fit" id="fit-view" data-i18n="zoom.fit">Ajustar</button>
+          <button class="icon-btn" id="menu-button" aria-label="Más opciones" aria-haspopup="menu" data-i18n-aria="menu.more">
             <svg class="icon" aria-hidden="true"><use href="#i-more"/></svg>
           </button>
         </div>
@@ -153,27 +157,27 @@
             <circle cx="134" cy="51" r="2.2" fill="currentColor"/>
             <circle cx="134" cy="94" r="2.2" fill="currentColor"/>
           </svg>
-          <p class="empty__title">Un lienzo para pensar</p>
-          <p class="empty__text">Crea un concepto con doble clic en cualquier parte, o suelta una imagen para empezar.</p>
-          <button class="btn btn--primary" id="empty-add">Crear el primer concepto</button>
+          <p class="empty__title" data-i18n="canvas.emptyTitle">Un lienzo para pensar</p>
+          <p class="empty__text" data-i18n="canvas.emptyText">Crea un concepto con doble clic en cualquier parte, o suelta una imagen para empezar.</p>
+          <button class="btn btn--primary" id="empty-add" data-i18n="canvas.emptyAdd">Crear el primer concepto</button>
         </div>
 
         <div class="drop" id="drop" hidden>
           <div class="drop__inner">
             <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
-            <span>Suelta la imagen para añadirla al mapa</span>
+            <span data-i18n="canvas.drop">Suelta la imagen para añadirla al mapa</span>
           </div>
         </div>
 
         <p class="canvas__hint" id="canvas-hint">
-          <span><strong>Doble clic</strong> para crear</span>
+          <span><strong data-i18n="canvas.doubleClick">Doble clic</strong> <span data-i18n="canvas.hintCreate">para crear</span></span>
           <span class="canvas__hint-sep"></span>
-          <span>Arrastra desde el borde de un concepto para relacionarlo</span>
+          <span data-i18n="canvas.hintLink">Arrastra desde el borde de un concepto para relacionarlo</span>
         </p>
       </div>
     </main>
 
-    <aside class="inspector" id="inspector" aria-label="Detalle del concepto" aria-hidden="true">
+    <aside class="inspector" id="inspector" aria-label="Detalle del concepto" aria-hidden="true" data-i18n-aria="inspector.aria">
       <div class="inspector__head">
         <div class="inspector__kind">
           <span class="kind__tick" id="kind-tick"></span>
@@ -183,23 +187,23 @@
           <button class="icon-btn" id="isolate-top" title="Aislar relaciones" aria-label="Aislar relaciones">
             <svg class="icon" aria-hidden="true"><use href="#i-focus"/></svg>
           </button>
-          <button class="icon-btn" id="delete-concept" title="Eliminar concepto" aria-label="Eliminar concepto">
+          <button class="icon-btn" id="delete-concept" title="Eliminar concepto" aria-label="Eliminar concepto" data-i18n-title="inspector.delete" data-i18n-aria="inspector.delete">
             <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>
           </button>
-          <button class="icon-btn" id="close-inspector" title="Cerrar" aria-label="Cerrar el detalle">
+          <button class="icon-btn" id="close-inspector" title="Cerrar" aria-label="Cerrar el detalle" data-i18n-title="inspector.close" data-i18n-aria="inspector.closeDetail">
             <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
           </button>
         </div>
       </div>
 
       <div class="inspector__scroll" id="inspector-scroll">
-        <textarea class="insp-title" id="insp-title" rows="1" placeholder="Nombra el concepto" aria-label="Nombre del concepto" spellcheck="false"></textarea>
+        <textarea class="insp-title" id="insp-title" rows="1" placeholder="Nombra el concepto" aria-label="Nombre del concepto" spellcheck="false" data-i18n-placeholder="inspector.namePlaceholder" data-i18n-aria="inspector.name"></textarea>
 
         <div class="insp-image" id="insp-image" hidden>
           <img id="insp-image-img" alt="">
           <div class="insp-image__tools">
-            <button class="chip-btn" id="replace-image">Cambiar</button>
-            <button class="chip-btn" id="remove-image">Quitar</button>
+            <button class="chip-btn" id="replace-image" data-i18n="inspector.change">Cambiar</button>
+            <button class="chip-btn" id="remove-image" data-i18n="inspector.remove">Quitar</button>
           </div>
         </div>
         <button class="text-btn text-btn--image" id="add-image">
@@ -209,28 +213,28 @@
 
         <section class="field">
           <div class="field__head">
-            <label class="field__label" for="insp-desc">Descripción</label>
+            <label class="field__label" for="insp-desc" data-i18n="inspector.description">Descripción</label>
           </div>
-          <textarea class="field__textarea" id="insp-desc" placeholder="Anota qué significa, por qué importa o cómo se conecta con el resto." aria-label="Descripción del concepto"></textarea>
+          <textarea class="field__textarea" id="insp-desc" placeholder="Anota qué significa, por qué importa o cómo se conecta con el resto." aria-label="Descripción del concepto" data-i18n-placeholder="inspector.descPlaceholder" data-i18n-aria="inspector.descAria"></textarea>
         </section>
 
         <section class="field">
           <div class="field__head">
-            <span class="field__label">Color</span>
-            <span class="field__note">Marca el trazo en el mapa</span>
+            <span class="field__label" data-i18n="inspector.color">Color</span>
+            <span class="field__note" data-i18n="inspector.colorNote">Marca el trazo en el mapa</span>
           </div>
-          <div class="swatches" id="swatches" role="group" aria-label="Color del concepto"></div>
+          <div class="swatches" id="swatches" role="group" aria-label="Color del concepto" data-i18n-aria="inspector.colorAria"></div>
         </section>
 
         <section class="field">
           <div class="field__head">
-            <span class="field__label">Conexiones</span>
+            <span class="field__label" data-i18n="inspector.connections">Conexiones</span>
             <span class="field__note" id="link-count">0</span>
           </div>
           <ul class="link-list" id="link-list"></ul>
           <button class="text-btn" id="link-add">
             <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
-            <span>Relacionar con otro concepto</span>
+            <span data-i18n="inspector.addLink">Relacionar con otro concepto</span>
           </button>
         </section>
       </div>
@@ -249,11 +253,11 @@
 
   <dialog class="dialog" id="confirm">
     <form method="dialog" class="dialog__panel">
-      <h2 class="dialog__title" id="confirm-title">¿Eliminar este concepto?</h2>
+      <h2 class="dialog__title" id="confirm-title" data-i18n="confirm.deleteTitle">¿Eliminar este concepto?</h2>
       <p class="dialog__text" id="confirm-text"></p>
       <div class="dialog__actions">
-        <button class="btn btn--quiet" value="cancel">Cancelar</button>
-        <button class="btn btn--danger" id="confirm-ok" value="confirm">Eliminar</button>
+        <button class="btn btn--quiet" value="cancel" data-i18n="confirm.cancel">Cancelar</button>
+        <button class="btn btn--danger" id="confirm-ok" value="confirm" data-i18n="confirm.delete">Eliminar</button>
       </div>
     </form>
   </dialog>
@@ -261,40 +265,40 @@
   <dialog class="dialog dialog--wide" id="help">
     <div class="dialog__panel">
       <div class="dialog__head">
-        <h2 class="dialog__title">Todo lo que puedes hacer</h2>
-        <button class="icon-btn" id="help-close" aria-label="Cerrar">
+        <h2 class="dialog__title" data-i18n="help.title">Todo lo que puedes hacer</h2>
+        <button class="icon-btn" id="help-close" aria-label="Cerrar" data-i18n-aria="help.close" data-i18n-title="help.close">
           <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
         </button>
       </div>
       <div class="help__grid">
         <div class="help__col">
-          <h3 class="help__heading">En el lienzo</h3>
+          <h3 class="help__heading" data-i18n="help.canvas">En el lienzo</h3>
           <dl class="shortcuts">
-            <div><dt>Doble clic</dt><dd>Crear un concepto en ese punto</dd></div>
-            <div><dt>Arrastrar desde el borde</dt><dd>Unir dos conceptos</dd></div>
-            <div><dt>Rueda del ratón</dt><dd>Acercar y alejar</dd></div>
-            <div><dt>Arrastrar el fondo</dt><dd>Mover el mapa</dd></div>
-            <div><dt>Soltar una imagen</dt><dd>Añadirla como concepto visual</dd></div>
-            <div><dt>Doble clic en un concepto</dt><dd>Aislarlo con sus relacionados</dd></div>
+            <div><dt data-i18n="help.dblclick">Doble clic</dt><dd data-i18n="help.dblclickDesc">Crear un concepto en ese punto</dd></div>
+            <div><dt data-i18n="help.dragEdge">Arrastrar desde el borde</dt><dd data-i18n="help.dragEdgeDesc">Unir dos conceptos</dd></div>
+            <div><dt data-i18n="help.wheel">Rueda del ratón</dt><dd data-i18n="help.wheelDesc">Acercar y alejar</dd></div>
+            <div><dt data-i18n="help.dragBg">Arrastrar el fondo</dt><dd data-i18n="help.dragBgDesc">Mover el mapa</dd></div>
+            <div><dt data-i18n="help.dropImage">Soltar una imagen</dt><dd data-i18n="help.dropImageDesc">Añadirla como concepto visual</dd></div>
+            <div><dt data-i18n="help.dblclickNode">Doble clic en un concepto</dt><dd data-i18n="help.dblclickNodeDesc">Aislarlo con sus relacionados</dd></div>
           </dl>
         </div>
         <div class="help__col">
-          <h3 class="help__heading">Con el teclado</h3>
+          <h3 class="help__heading" data-i18n="help.keyboard">Con el teclado</h3>
           <dl class="shortcuts">
-            <div><dt><kbd>N</kbd></dt><dd>Nuevo concepto</dd></div>
-            <div><dt><kbd>/</kbd></dt><dd>Buscar</dd></div>
-            <div><dt><kbd>F</kbd></dt><dd>Aislar el concepto seleccionado</dd></div>
-            <div><dt><kbd>Esc</kbd></dt><dd>Salir del foco o cerrar paneles</dd></div>
-            <div><dt><kbd>Supr</kbd></dt><dd>Eliminar la selección</dd></div>
-            <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Deshacer</dd></div>
-            <div><dt><kbd>0</kbd></dt><dd>Encuadrar todo el mapa</dd></div>
+            <div><dt><kbd>N</kbd></dt><dd data-i18n="help.kNewDesc">Nuevo concepto</dd></div>
+            <div><dt><kbd>/</kbd></dt><dd data-i18n="help.kSearchDesc">Buscar</dd></div>
+            <div><dt><kbd>F</kbd></dt><dd data-i18n="help.kFocusDesc">Aislar el concepto seleccionado</dd></div>
+            <div><dt><kbd>Esc</kbd></dt><dd data-i18n="help.kEscDesc">Salir del foco o cerrar paneles</dd></div>
+            <div><dt><kbd data-i18n="help.kDelete">Supr</kbd></dt><dd data-i18n="help.kDeleteDesc">Eliminar la selección</dd></div>
+            <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd data-i18n="help.kUndoDesc">Deshacer</dd></div>
+            <div><dt><kbd>0</kbd></dt><dd data-i18n="help.kFitDesc">Encuadrar todo el mapa</dd></div>
           </dl>
           <div class="help__data">
-            <h3 class="help__heading">Tus datos</h3>
-            <p>Todo se guarda en <code id="data-path">data/atlas.json</code>, junto a la aplicación. Sin cuentas y sin conexión.</p>
+            <h3 class="help__heading" data-i18n="help.data">Tus datos</h3>
+            <p><span data-i18n="help.dataBefore">Todo se guarda en</span> <code id="data-path">data/atlas.json</code><span data-i18n="help.dataAfter">, junto a la aplicación. Sin cuentas y sin conexión.</span></p>
             <button class="text-btn" id="reveal-data">
               <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
-              <span>Abrir la carpeta de datos</span>
+              <span data-i18n="help.reveal">Abrir la carpeta de datos</span>
             </button>
           </div>
         </div>
@@ -305,20 +309,20 @@
   <div class="menu" id="menu" role="menu" hidden>
     <button class="menu__item" data-action="export" role="menuitem">
       <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>
-      <span>Exportar mapa (.json)</span>
+      <span data-i18n="menu.export">Exportar mapa (.json)</span>
     </button>
     <button class="menu__item" data-action="import" role="menuitem">
       <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
-      <span>Importar un mapa</span>
+      <span data-i18n="menu.import">Importar un mapa</span>
     </button>
     <div class="menu__sep"></div>
     <button class="menu__item" data-action="reveal" role="menuitem">
       <svg class="icon" aria-hidden="true"><use href="#i-machine"/></svg>
-      <span>Abrir carpeta de datos</span>
+      <span data-i18n="menu.reveal">Abrir carpeta de datos</span>
     </button>
     <button class="menu__item" data-action="help" role="menuitem">
       <svg class="icon" aria-hidden="true"><use href="#i-focus"/></svg>
-      <span>Atajos y ayuda</span>
+      <span data-i18n="menu.help">Atajos y ayuda</span>
     </button>
   </div>
 
@@ -329,7 +333,7 @@
   <div class="boot" id="boot">
     <svg class="boot__mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mark"/></svg>
     <p class="boot__name">Concept</p>
-    <p class="boot__text">Abriendo tu mapa</p>
+    <p class="boot__text" data-i18n="boot.opening">Abriendo tu mapa</p>
   </div>
 
   <script type="module" src="/js/main.js"></script>

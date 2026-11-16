@@ -2,7 +2,8 @@
 
 import * as store from './store.js'
 import { PALETTE, state } from './store.js'
-import { uploadImage, readJsonFile, slugify, download, fold, plural, clamp } from './utils.js'
+import { uploadImage, readJsonFile, slugify, download, fold, clamp } from './utils.js'
+import { t, getLang, setLang, applyStaticTranslations } from './i18n.js'
 
 const $ = (sel) => document.querySelector(sel)
 const els = {}
@@ -13,7 +14,8 @@ let inspectorWasOpen = false
 const announce = (type, detail = {}) =>
   window.dispatchEvent(new CustomEvent(`concept:${type}`, { detail }))
 
-const titleOf = (concept) => (concept && concept.title.trim()) || 'Concepto sin título'
+const titleOf = (concept) => (concept && concept.title.trim()) || t('concept.untitled')
+const relationCount = (n) => `${n} ${t(n === 1 ? 'relation.one' : 'relation.other')}`
 const degreeOf = (id) => store.linksOf(id).length
 
 export function initUI() {
@@ -81,6 +83,7 @@ export function initUI() {
     closeInspector: $('#close-inspector'),
 
     toasts: $('#toasts'),
+    langButtons: [...document.querySelectorAll('.lang__btn')],
     confirm: $('#confirm'),
     confirmTitle: $('#confirm-title'),
     confirmText: $('#confirm-text'),
@@ -92,10 +95,24 @@ export function initUI() {
   })
 
   bind()
+  syncLangButtons()
   store.subscribe(onStore)
   renderAll()
   loadServerInfo()
   announceReady()
+}
+
+function syncLangButtons() {
+  const lang = getLang()
+  for (const button of els.langButtons) {
+    button.setAttribute('aria-pressed', String(button.dataset.lang === lang))
+  }
+}
+
+function syncDocTitle() {
+  document.title = state.doc.title.trim()
+    ? t('app.titleNamed', { title: state.doc.title })
+    : t('app.title')
 }
 
 function announceReady() {
@@ -124,7 +141,7 @@ function onStore(type, detail) {
       break
     case 'title':
       if (document.activeElement !== els.docTitle) els.docTitle.value = state.doc.title
-      document.title = state.doc.title === 'Sin título' ? 'Concept — mapas conceptuales' : `${state.doc.title} — Concept`
+      syncDocTitle()
       break
     case 'concepts':
       renderRail()
@@ -169,7 +186,7 @@ function onStore(type, detail) {
 
 function renderAll() {
   if (document.activeElement !== els.docTitle) els.docTitle.value = state.doc.title
-  document.title = state.doc.title === 'Sin título' ? 'Concept — mapas conceptuales' : `${state.doc.title} — Concept`
+  syncDocTitle()
   if (document.activeElement !== els.search && state.query !== els.search.value) els.search.value = state.query
   renderRail()
   renderFocusbar()
@@ -205,8 +222,8 @@ function renderRail() {
   const list = visibleConcepts()
   const total = state.doc.concepts.length
 
-  els.listLabel.textContent = focus ? 'En este foco' : 'Conceptos'
-  els.conceptCount.textContent = query ? `${list.length} de ${total}` : String(total)
+  els.listLabel.textContent = focus ? t('rail.focus') : t('rail.concepts')
+  els.conceptCount.textContent = query ? t('rail.countOf', { shown: list.length, total }) : String(total)
   els.searchNone.hidden = !(query && !list.length)
   els.conceptList.replaceChildren()
 
@@ -252,7 +269,7 @@ function renderRail() {
     const rel = document.createElement('span')
     rel.className = 'concept__rel'
     rel.textContent = String(degreeOf(concept.id))
-    rel.title = plural(degreeOf(concept.id), 'relación', 'relaciones')
+    rel.title = relationCount(degreeOf(concept.id))
     button.append(rel)
 
     button.addEventListener('click', () => {
@@ -280,7 +297,7 @@ function renderFocusbar() {
   els.focusbar.hidden = false
   els.focusTitle.textContent = titleOf(center)
   const near = new Set(store.neighborsOf(center.id).map((n) => n.concept.id))
-  els.focusCount.textContent = near.size ? plural(near.size, 'relacionado', 'relacionados') : 'Sin relaciones'
+  els.focusCount.textContent = near.size ? relationCount(near.size) : t('focus.none')
   els.focusBack.disabled = state.focus.length < 2
 }
 
@@ -309,7 +326,7 @@ function renderInspector() {
     inspectorWasOpen = true
     announce('inspector', { open: true })
   }
-  els.inspKind.textContent = concept.image ? 'Concepto con imagen' : 'Concepto'
+  els.inspKind.textContent = concept.image ? t('inspector.conceptImage') : t('inspector.concept')
   els.kindTick.style.background = concept.color
 
   if (document.activeElement !== els.inspTitle) els.inspTitle.value = concept.title
@@ -321,12 +338,12 @@ function renderInspector() {
     if (els.inspImageImg.getAttribute('src') !== concept.image) {
       els.inspImageImg.src = concept.image
     }
-    els.inspImageImg.alt = `Imagen de ${titleOf(concept)}`
-    els.addImageLabel.textContent = 'Sustituir la imagen'
+    els.inspImageImg.alt = t('inspector.imageAlt', { title: titleOf(concept) })
+    els.addImageLabel.textContent = t('inspector.replaceImage')
   } else {
     els.inspImage.hidden = true
     els.inspImageImg.removeAttribute('src')
-    els.addImageLabel.textContent = 'Añadir una imagen'
+    els.addImageLabel.textContent = t('inspector.addImage')
   }
 
   renderSwatches(concept)
@@ -342,8 +359,8 @@ function renderSwatches(concept) {
     button.className = 'swatch'
     button.style.setProperty('--swatch', color.value)
     button.dataset.color = color.value
-    button.title = color.name
-    button.setAttribute('aria-label', color.name)
+    button.title = t(`palette.${color.key}`)
+    button.setAttribute('aria-label', button.title)
     button.setAttribute('aria-pressed', String(concept.color === color.value))
     if (concept.color === color.value) button.classList.add('is-selected')
     const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -367,8 +384,8 @@ function renderConnections(concept) {
   connections.sort((a, b) => titleOf(a.concept).localeCompare(titleOf(b.concept), 'es'))
   els.linkList.replaceChildren()
   els.linkCount.textContent = connections.length
-    ? plural(connections.length, 'relación', 'relaciones')
-    : 'sin relaciones'
+    ? relationCount(connections.length)
+    : t('inspector.noLinks')
 
   for (const { concept: other, link, direction } of connections) {
     const li = document.createElement('li')
@@ -378,7 +395,7 @@ function renderConnections(concept) {
     const arrow = document.createElement('span')
     arrow.className = 'link-row__arrow'
     arrow.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#i-arrow-${direction === 'out' ? 'right' : 'left'}"/></svg>`
-    arrow.title = direction === 'out' ? 'Sale de este concepto' : 'Llega a este concepto'
+    arrow.title = direction === 'out' ? t('link.out') : t('link.in')
 
     const main = document.createElement('div')
     main.className = 'link-row__main'
@@ -393,8 +410,8 @@ function renderConnections(concept) {
     const label = document.createElement('input')
     label.className = 'link-row__label'
     label.value = link.label
-    label.placeholder = 'Añadir una nota a la relación'
-    label.setAttribute('aria-label', `Nota de la relación con ${titleOf(other)}`)
+    label.placeholder = t('link.notePlaceholder')
+    label.setAttribute('aria-label', t('link.noteAria', { title: titleOf(other) }))
     label.addEventListener('input', () => {
       store.updateLink(link.id, { label: label.value }, { save: true })
     })
@@ -409,12 +426,12 @@ function renderConnections(concept) {
     const remove = document.createElement('button')
     remove.type = 'button'
     remove.className = 'link-row__remove'
-    remove.title = 'Eliminar la relación'
-    remove.setAttribute('aria-label', `Eliminar la relación con ${titleOf(other)}`)
+    remove.title = t('link.remove')
+    remove.setAttribute('aria-label', t('link.removeAria', { title: titleOf(other) }))
     remove.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>'
     remove.addEventListener('click', () => {
       store.removeLink(link.id)
-      showToast('Relación eliminada', { action: 'Deshacer', onAction: () => store.undo() })
+      showToast(t('link.deleted'), { action: t('undo'), onAction: () => store.undo() })
     })
 
     li.append(arrow, main, remove)
@@ -432,13 +449,13 @@ function renderIsolate(concept) {
   const center = store.focusCenter()
   const isCenter = center && center.id === concept.id
   els.isolateLabel.textContent = isCenter
-    ? 'Salir del foco'
-    : 'Aislar este concepto y sus relaciones'
-  els.isolateTop.title = isCenter ? 'Salir del foco' : 'Aislar relaciones'
+    ? t('inspector.isolateExit')
+    : t('inspector.isolateAction')
+  els.isolateTop.title = isCenter ? t('inspector.isolateExit') : t('inspector.isolate')
   els.isolateTop.setAttribute('aria-label', els.isolateTop.title)
   els.inspectorHint.textContent = isCenter
-    ? 'Ves este concepto y sus vecinos. El resto sigue guardado.'
-    : 'Se oculta el resto del mapa hasta que salgas del foco.'
+    ? t('inspector.hintFocus')
+    : t('inspector.hintIsolate')
 }
 
 function autosizeTitle() {
@@ -463,21 +480,29 @@ export function createConcept() {
 
 function renderSave() {
   const map = {
-    saved: 'Guardado',
-    saving: 'Guardando…',
-    error: 'No se pudo guardar',
+    saved: t('save.saved'),
+    saving: t('save.saving'),
+    error: t('save.error'),
   }
   els.saveStatus.dataset.state = state.save
-  els.saveText.textContent = map[state.save] || 'Guardado'
+  els.saveText.textContent = map[state.save] || t('save.saved')
   els.saveStatus.title =
-    state.save === 'error'
-      ? 'No se pudo escribir en disco. Revisa que la carpeta de Concept siga accesible.'
-      : 'Tus cambios se guardan en este equipo'
+    state.save === 'error' ? t('save.errorHint') : t('save.savedHint')
 }
 
 /* --------------------------------------------------------------- eventos */
 
 function bind() {
+  for (const button of els.langButtons) {
+    button.addEventListener('click', () => setLang(button.dataset.lang))
+  }
+  window.addEventListener('concept:language', () => {
+    applyStaticTranslations()
+    closePopover()
+    syncLangButtons()
+    renderAll()
+  })
+
   els.newConcept.addEventListener('click', createConcept)
   els.emptyAdd.addEventListener('click', createConcept)
   els.centerMap.addEventListener('click', () => announce('fit'))
@@ -499,7 +524,7 @@ function bind() {
       els.railImage.classList.add('is-busy')
       const url = await uploadImage(file)
       announce('image', { url })
-      showToast('Imagen añadida al mapa')
+      showToast(t('toast.imageAdded'))
     } catch (err) {
       showToast(err.message)
     } finally {
@@ -526,7 +551,7 @@ function bind() {
 
   els.docTitle.addEventListener('input', () => {
     store.setTitle(els.docTitle.value)
-    const value = els.docTitle.value.trim() || 'Sin título'
+    const value = els.docTitle.value.trim() || t('doc.untitled')
     els.docTitle.style.width = `${clamp(value.length * 8.2, 90, 380)}px`
   })
   els.docTitle.addEventListener('blur', () => {
@@ -571,7 +596,7 @@ function bind() {
     els.fileInsp.value = ''
     if (!file || !state.selection) return
     try {
-      els.addImageLabel.textContent = 'Guardando imagen…'
+      els.addImageLabel.textContent = t('inspector.savingImage')
       const url = await uploadImage(file)
       store.updateConcept(state.selection, { image: url }, { history: true })
     } catch (err) {
@@ -645,8 +670,8 @@ export function deleteSelection() {
   if (!concept) return
   const removed = store.removeConcept(concept.id)
   if (!removed) return
-  showToast(`«${titleOf(removed)}» eliminado`, {
-    action: 'Deshacer',
+  showToast(t('concept.deleted', { title: titleOf(removed) }), {
+    action: t('undo'),
     onAction: () => store.undo(),
     duration: 6500,
   })
@@ -656,17 +681,17 @@ async function importFile(file) {
   try {
     const data = await readJsonFile(file)
     if (!data || !Array.isArray(data.concepts)) {
-      throw new Error('El archivo no parece un mapa de Concept.')
+      throw new Error(t('import.badMap'))
     }
     const ok = await askConfirm({
-      title: 'Importar este mapa',
-      text: `Se reemplazará el mapa actual por «${data.title || 'Sin título'}». Después puedes deshacerlo.`,
-      confirmLabel: 'Importar mapa',
+      title: t('import.title'),
+      text: t('import.text', { title: data.title || t('doc.untitled') }),
+      confirmLabel: t('import.confirm'),
     })
     if (!ok) return
     store.replaceDoc(data)
     announce('fit')
-    showToast('Mapa importado', { action: 'Deshacer', onAction: () => store.undo() })
+    showToast(t('toast.imported'), { action: t('undo'), onAction: () => store.undo() })
   } catch (err) {
     showToast(err.message)
   }
@@ -675,15 +700,15 @@ async function importFile(file) {
 function exportMap() {
   const name = `${slugify(state.doc.title)}-concept.json`
   download(name, JSON.stringify(state.doc, null, 2))
-  showToast('Mapa exportado')
+  showToast(t('toast.exported'))
 }
 
 async function revealData() {
   try {
     await fetch('/api/reveal', { method: 'POST' })
-    showToast('Carpeta de datos abierta')
+    showToast(t('toast.dataOpened'))
   } catch {
-    showToast('No se pudo abrir la carpeta de datos')
+    showToast(t('toast.dataError'))
   }
 }
 
@@ -691,7 +716,7 @@ export function openHelp() {
   els.help.showModal()
 }
 
-function askConfirm({ title, text, confirmLabel = 'Eliminar' }) {
+function askConfirm({ title, text, confirmLabel = t('confirm.delete') }) {
   return new Promise((resolve) => {
     els.confirmTitle.textContent = title
     els.confirmText.textContent = text
@@ -785,10 +810,10 @@ function openLinkPicker() {
   el.className = 'pop'
   el.innerHTML = `
     <div class="pop__head">
-      <span class="pop__title">Relacionar con…</span>
-      <button class="icon-btn pop__close" aria-label="Cerrar"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      <span class="pop__title">${t('pop.linkTitle')}</span>
+      <button class="icon-btn pop__close" aria-label="${t('pop.close')}"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
     </div>
-    <input class="pop__input" type="search" placeholder="Buscar un concepto" aria-label="Buscar un concepto">
+    <input class="pop__input" type="search" placeholder="${t('pop.search')}" aria-label="${t('pop.search')}">
     <div class="pop__list" role="listbox"></div>
   `
   el.querySelector('.pop__close').addEventListener('click', () => closePopover())
@@ -803,14 +828,14 @@ function openLinkPicker() {
     if (!available.length) {
       const empty = document.createElement('p')
       empty.className = 'pop__empty'
-      empty.textContent = 'Ya está relacionado con todos los conceptos del mapa.'
+      empty.textContent = t('pop.allLinked')
       list.append(empty)
       return
     }
     if (!matches.length) {
       const empty = document.createElement('p')
       empty.className = 'pop__empty'
-      empty.textContent = 'Ningún concepto coincide.'
+      empty.textContent = t('pop.noMatch')
       list.append(empty)
       return
     }
@@ -830,8 +855,8 @@ function openLinkPicker() {
         closePopover()
         if (created) {
           renderInspector()
-          showToast(`Relacionado con «${titleOf(target)}»`, {
-            action: 'Deshacer',
+          showToast(t('link.linkedTo', { title: titleOf(target) }), {
+            action: t('undo'),
             onAction: () => store.undo(),
           })
         }
@@ -876,17 +901,17 @@ function openEdgePopover({ linkId, x, y }) {
   el.className = 'pop'
   el.innerHTML = `
     <div class="pop__head">
-      <span class="pop__title">Relación</span>
-      <button class="icon-btn pop__close" aria-label="Cerrar"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      <span class="pop__title">${t('pop.relation')}</span>
+      <button class="icon-btn pop__close" aria-label="${t('pop.close')}"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
     </div>
     <div class="pop__names"></div>
     <div class="pop__field">
-      <label class="pop__label" for="edge-label">Cómo se relacionan</label>
-      <input class="pop__input pop__input--label" id="edge-label" placeholder="Opcional: describe el vínculo">
+      <label class="pop__label" for="edge-label">${t('pop.how')}</label>
+      <input class="pop__input pop__input--label" id="edge-label" placeholder="${t('pop.labelPlaceholder')}">
     </div>
     <div class="pop__foot">
-      <button class="pop__danger" type="button">Eliminar relación</button>
-      <span class="pop__hint">Intro para cerrar</span>
+      <button class="pop__danger" type="button">${t('pop.remove')}</button>
+      <span class="pop__hint">${t('pop.enterClose')}</span>
     </div>
   `
 
@@ -914,7 +939,7 @@ function openEdgePopover({ linkId, x, y }) {
   el.querySelector('.pop__danger').addEventListener('click', () => {
     store.removeLink(link.id)
     closePopover()
-    showToast('Relación eliminada', { action: 'Deshacer', onAction: () => store.undo() })
+    showToast(t('link.deleted'), { action: t('undo'), onAction: () => store.undo() })
   })
 
   mountPopover(el, { x: x - 140, y: y + 14, onClose: () => store.setSelectedLink(null) })

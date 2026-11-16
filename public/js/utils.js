@@ -1,10 +1,8 @@
 /* Concept — utilidades compartidas. */
 
-export const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+import { t } from './i18n.js'
 
-export function plural(n, one, many) {
-  return `${n} ${n === 1 ? one : many}`
-}
+export const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
 
 export function fold(text) {
   return String(text || '')
@@ -40,10 +38,10 @@ export function readJsonFile(file) {
       try {
         resolve(JSON.parse(String(reader.result)))
       } catch {
-        reject(new Error('El archivo no contiene un mapa válido.'))
+        reject(new Error(t('file.invalid')))
       }
     }
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo.'))
+    reader.onerror = () => reject(new Error(t('file.unreadable')))
     reader.readAsText(file)
   })
 }
@@ -52,17 +50,25 @@ function readDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve(String(reader.result))
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'))
+    reader.onerror = () => reject(new Error(t('image.readError')))
     reader.readAsDataURL(file)
   })
 }
 
+const IMAGE_ERRORS = {
+  'image-format': 'image.errorFormat',
+  'image-type': 'image.errorType',
+  'image-too-large': 'image.errorTooLarge',
+  'file-too-large': 'image.errorTooLarge',
+  'server-error': 'image.errorServer',
+}
+
 export async function uploadImage(file) {
   if (!file || !file.type.startsWith('image/')) {
-    throw new Error('Ese archivo no es una imagen.')
+    throw new Error(t('image.notImage'))
   }
   if (file.size > 18 * 1024 * 1024) {
-    throw new Error('La imagen supera los 18 MB. Prueba con una más ligera.')
+    throw new Error(t('image.tooLarge'))
   }
   const data = await readDataUrl(file)
   const res = await fetch('/api/images', {
@@ -72,7 +78,8 @@ export async function uploadImage(file) {
   })
   if (!res.ok) {
     const info = await res.json().catch(() => ({}))
-    throw new Error(info.error || 'No se pudo guardar la imagen.')
+    const key = IMAGE_ERRORS[info.error]
+    throw new Error(key ? t(key) : t('image.saveError'))
   }
   const info = await res.json()
   return info.url
