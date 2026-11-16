@@ -1,0 +1,17 @@
+{
+  "name": "Concept — mapas conceptuales",
+  "short_name": "Concept",
+  "description": "Un cuaderno visual para ordenar conceptos, imágenes y las relaciones entre ellos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E7E9E2",
+  "theme_color": "#E7E9E2",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

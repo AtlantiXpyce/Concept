@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concept — mapas conceptuales</title>
+  <meta name="description" content="Un cuaderno visual para ordenar conceptos, imágenes y las relaciones entre ellos.">
+  <meta name="theme-color" content="#E7E9E2">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-mark" viewBox="0 0 24 24">
+      <path d="M3.2 17.6C9 3.6 15.2 20.4 20.8 6.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M3.2 6.4C9 20.4 15.2 3.6 20.8 17.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".55"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 20 20"><path d="M10 4.5v11M4.5 10h11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-image" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="7.6" cy="8.2" r="1.2" fill="currentColor"/><path d="m4.5 14.5 3.9-3.9 2.6 2.6 1.8-1.6 2.7 2.9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-search" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m13 13 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 20 20"><path d="M4 7.5V5.2c0-.7.5-1.2 1.2-1.2H7.5M12.5 4h2.3c.7 0 1.2.5 1.2 1.2v2.3M16 12.5v2.3c0 .7-.5 1.2-1.2 1.2h-2.3M7.5 16H5.2c-.7 0-1.2-.5-1.2-1.2v-2.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-more" viewBox="0 0 20 20"><circle cx="5" cy="10" r="1.35" fill="currentColor"/><circle cx="10" cy="10" r="1.35" fill="currentColor"/><circle cx="15" cy="10" r="1.35" fill="currentColor"/></symbol>
+    <symbol id="i-close" viewBox="0 0 20 20"><path d="m5.5 5.5 9 9M14.5 5.5l-9 9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 20 20"><path d="M4.5 6h11M8 3.8h4M6 6l.7 9.2c.05.65.6 1.1 1.25 1.1h4.1c.65 0 1.2-.45 1.25-1.1L14 6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M8.6 9v4.2M11.4 9v4.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></symbol>
+    <symbol id="i-focus" viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.1" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="5.4" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".55"/><path d="M10 1.8v2.1M10 16.1v2.1M1.8 10h2.1M16.1 10h2.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 20 20"><path d="M16 10H4.5m0 0 4.2-4.2M4.5 10l4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 20 20"><path d="M4 10h11.5m0 0-4.2-4.2M15.5 10l-4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 20 20"><path d="m4.8 10.2 3.4 3.4 7-7.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 20 20"><path d="M4 6.5h12M4 10h12M4 13.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 20 20"><path d="M7.6 5.6 4 9.2l3.6 3.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.4 9.2h6.7a4.4 4.4 0 0 1 0 8.8H9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-machine" viewBox="0 0 20 20"><rect x="3" y="4.5" width="14" height="9" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7 16.6h6M10 13.5v3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 20 20"><path d="M10 3.5v8.4m0 0 3.2-3.2M10 11.9 6.8 8.7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 13.4v1.9c0 .7.5 1.2 1.2 1.2h9.6c.7 0 1.2-.5 1.2-1.2v-1.9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 20 20"><path d="M10 12.5V4.1m0 0L6.8 7.3M10 4.1l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 13.4v1.9c0 .7.5 1.2 1.2 1.2h9.6c.7 0 1.2-.5 1.2-1.2v-1.9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+  </svg>
+
+  <div class="app" id="app">
+    <aside class="rail" id="rail" aria-label="Índice del mapa">
+      <div class="rail__brand">
+        <svg class="brand__mark" aria-hidden="true"><use href="#i-mark"/></svg>
+        <span class="brand__name">Concept</span>
+        <button class="icon-btn rail__close" id="rail-close" aria-label="Cerrar el índice">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+        </button>
+      </div>
+
+      <div class="rail__top">
+        <div class="rail__buttons">
+          <button class="btn btn--primary rail__new" id="new-concept">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+            <span>Nuevo concepto</span>
+          </button>
+          <button class="btn btn--quiet btn--square" id="rail-image" title="Añadir una imagen al mapa" aria-label="Añadir una imagen al mapa">
+            <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+          </button>
+        </div>
+
+        <div class="search">
+          <svg class="icon search__icon" aria-hidden="true"><use href="#i-search"/></svg>
+          <input id="search" type="search" placeholder="Buscar conceptos" autocomplete="off" spellcheck="false" aria-label="Buscar conceptos">
+          <kbd class="search__key">/</kbd>
+        </div>
+      </div>
+
+      <div class="rail__section">
+        <div class="rail__label">
+          <span id="list-label">Conceptos</span>
+          <span class="rail__count" id="concept-count">0</span>
+        </div>
+        <ul class="concept-list" id="concept-list"></ul>
+        <p class="rail__none" id="search-none" hidden>Ningún concepto coincide.</p>
+      </div>
+
+      <div class="rail__foot">
+        <button class="ghost-btn" id="center-map">
+          <svg class="icon" aria-hidden="true"><use href="#i-fit"/></svg>
+          <span>Centrar el mapa</span>
+          <kbd>0</kbd>
+        </button>
+        <button class="ghost-btn" id="open-help">
+          <svg class="icon" aria-hidden="true"><use href="#i-machine"/></svg>
+          <span>Atajos y datos</span>
+        </button>
+      </div>
+    </aside>
+
+    <div class="scrim" id="scrim" hidden></div>
+
+    <main class="stage" id="stage">
+      <header class="topbar">
+        <button class="icon-btn rail__toggle" id="rail-toggle" aria-label="Abrir el índice">
+          <svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg>
+        </button>
+
+        <div class="doc" id="doc">
+          <input class="doc__title" id="doc-title" value="Sin título" aria-label="Nombre del mapa" spellcheck="false">
+          <div class="doc__save" id="save-status" data-state="saved" title="Tus cambios se guardan en este equipo">
+            <span class="save__dot"></span>
+            <span id="save-text">Guardado</span>
+          </div>
+        </div>
+
+        <div class="focusbar" id="focusbar" hidden>
+          <button class="focusbar__back" id="focus-back" title="Volver al concepto anterior" aria-label="Volver al concepto anterior">
+            <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+          </button>
+          <div class="focusbar__text">
+            <span class="focusbar__label">En foco</span>
+            <strong class="focusbar__title" id="focus-title"></strong>
+          </div>
+          <span class="focusbar__count" id="focus-count"></span>
+          <button class="btn btn--quiet btn--sm" id="focus-exit">Ver el mapa completo</button>
+        </div>
+
+        <div class="viewtools">
+          <div class="zoom" role="group" aria-label="Zoom">
+            <button class="zoom__btn" id="zoom-out" aria-label="Alejar">−</button>
+            <button class="zoom__level" id="zoom-level" title="Volver al 100%">100%</button>
+            <button class="zoom__btn" id="zoom-in" aria-label="Acercar">+</button>
+          </div>
+          <button class="btn btn--quiet btn--sm viewtools__fit" id="fit-view">Ajustar</button>
+          <button class="icon-btn" id="menu-button" aria-label="Más opciones" aria-haspopup="menu">
+            <svg class="icon" aria-hidden="true"><use href="#i-more"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="canvas" id="canvas" tabindex="-1">
+        <div class="world" id="world">
+          <svg class="edges" id="edges" viewBox="-12000 -12000 24000 24000" aria-hidden="true">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M1.4 1.2 8.2 5 1.4 8.8" fill="none" stroke="#7C8981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+              <marker id="arrow-live" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M1.4 1.2 8.2 5 1.4 8.8" fill="none" stroke="#1F5C4A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </marker>
+            </defs>
+            <g id="edge-layer"></g>
+            <g id="live-layer"></g>
+          </svg>
+          <div class="nodes" id="nodes"></div>
+        </div>
+
+        <div class="empty" id="empty" hidden>
+          <svg class="empty__art" viewBox="0 0 220 110" aria-hidden="true">
+            <path d="M58 58c22-34 50 24 78-6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 5" opacity=".6"/>
+            <path d="M96 66c14 18 32 16 46 30" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 5" opacity=".6"/>
+            <rect x="22" y="40" width="48" height="34" rx="5" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="134" y="32" width="58" height="38" rx="5" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="134" y="82" width="42" height="24" rx="5" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <circle cx="70" cy="57" r="2.2" fill="currentColor"/>
+            <circle cx="134" cy="51" r="2.2" fill="currentColor"/>
+            <circle cx="134" cy="94" r="2.2" fill="currentColor"/>
+          </svg>
+          <p class="empty__title">Un lienzo para pensar</p>
+          <p class="empty__text">Crea un concepto con doble clic en cualquier parte, o suelta una imagen para empezar.</p>
+          <button class="btn btn--primary" id="empty-add">Crear el primer concepto</button>
+        </div>
+
+        <div class="drop" id="drop" hidden>
+          <div class="drop__inner">
+            <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+            <span>Suelta la imagen para añadirla al mapa</span>
+          </div>
+        </div>
+
+        <p class="canvas__hint" id="canvas-hint">
+          <span><strong>Doble clic</strong> para crear</span>
+          <span class="canvas__hint-sep"></span>
+          <span>Arrastra desde el borde de un concepto para relacionarlo</span>
+        </p>
+      </div>
+    </main>
+
+    <aside class="inspector" id="inspector" aria-label="Detalle del concepto" aria-hidden="true">
+      <div class="inspector__head">
+        <div class="inspector__kind">
+          <span class="kind__tick" id="kind-tick"></span>
+          <span id="insp-kind">Concepto</span>
+        </div>
+        <div class="inspector__tools">
+          <button class="icon-btn" id="isolate-top" title="Aislar relaciones" aria-label="Aislar relaciones">
+            <svg class="icon" aria-hidden="true"><use href="#i-focus"/></svg>
+          </button>
+          <button class="icon-btn" id="delete-concept" title="Eliminar concepto" aria-label="Eliminar concepto">
+            <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>
+          </button>
+          <button class="icon-btn" id="close-inspector" title="Cerrar" aria-label="Cerrar el detalle">
+            <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="inspector__scroll" id="inspector-scroll">
+        <textarea class="insp-title" id="insp-title" rows="1" placeholder="Nombra el concepto" aria-label="Nombre del concepto" spellcheck="false"></textarea>
+
+        <div class="insp-image" id="insp-image" hidden>
+          <img id="insp-image-img" alt="">
+          <div class="insp-image__tools">
+            <button class="chip-btn" id="replace-image">Cambiar</button>
+            <button class="chip-btn" id="remove-image">Quitar</button>
+          </div>
+        </div>
+        <button class="text-btn text-btn--image" id="add-image">
+          <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+          <span id="add-image-label">Añadir una imagen</span>
+        </button>
+
+        <section class="field">
+          <div class="field__head">
+            <label class="field__label" for="insp-desc">Descripción</label>
+          </div>
+          <textarea class="field__textarea" id="insp-desc" placeholder="Anota qué significa, por qué importa o cómo se conecta con el resto." aria-label="Descripción del concepto"></textarea>
+        </section>
+
+        <section class="field">
+          <div class="field__head">
+            <span class="field__label">Color</span>
+            <span class="field__note">Marca el trazo en el mapa</span>
+          </div>
+          <div class="swatches" id="swatches" role="group" aria-label="Color del concepto"></div>
+        </section>
+
+        <section class="field">
+          <div class="field__head">
+            <span class="field__label">Conexiones</span>
+            <span class="field__note" id="link-count">0</span>
+          </div>
+          <ul class="link-list" id="link-list"></ul>
+          <button class="text-btn" id="link-add">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+            <span>Relacionar con otro concepto</span>
+          </button>
+        </section>
+      </div>
+
+      <div class="inspector__foot">
+        <button class="btn btn--primary btn--wide" id="isolate">
+          <svg class="icon" aria-hidden="true"><use href="#i-focus"/></svg>
+          <span id="isolate-label">Aislar este concepto y sus relaciones</span>
+        </button>
+        <p class="inspector__hint" id="inspector-hint">Se oculta el resto del mapa hasta que salgas del foco.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <dialog class="dialog" id="confirm">
+    <form method="dialog" class="dialog__panel">
+      <h2 class="dialog__title" id="confirm-title">¿Eliminar este concepto?</h2>
+      <p class="dialog__text" id="confirm-text"></p>
+      <div class="dialog__actions">
+        <button class="btn btn--quiet" value="cancel">Cancelar</button>
+        <button class="btn btn--danger" id="confirm-ok" value="confirm">Eliminar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="dialog dialog--wide" id="help">
+    <div class="dialog__panel">
+      <div class="dialog__head">
+        <h2 class="dialog__title">Todo lo que puedes hacer</h2>
+        <button class="icon-btn" id="help-close" aria-label="Cerrar">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+        </button>
+      </div>
+      <div class="help__grid">
+        <div class="help__col">
+          <h3 class="help__heading">En el lienzo</h3>
+          <dl class="shortcuts">
+            <div><dt>Doble clic</dt><dd>Crear un concepto en ese punto</dd></div>
+            <div><dt>Arrastrar desde el borde</dt><dd>Unir dos conceptos</dd></div>
+            <div><dt>Rueda del ratón</dt><dd>Acercar y alejar</dd></div>
+            <div><dt>Arrastrar el fondo</dt><dd>Mover el mapa</dd></div>
+            <div><dt>Soltar una imagen</dt><dd>Añadirla como concepto visual</dd></div>
+            <div><dt>Doble clic en un concepto</dt><dd>Aislarlo con sus relacionados</dd></div>
+          </dl>
+        </div>
+        <div class="help__col">
+          <h3 class="help__heading">Con el teclado</h3>
+          <dl class="shortcuts">
+            <div><dt><kbd>N</kbd></dt><dd>Nuevo concepto</dd></div>
+            <div><dt><kbd>/</kbd></dt><dd>Buscar</dd></div>
+            <div><dt><kbd>F</kbd></dt><dd>Aislar el concepto seleccionado</dd></div>
+            <div><dt><kbd>Esc</kbd></dt><dd>Salir del foco o cerrar paneles</dd></div>
+            <div><dt><kbd>Supr</kbd></dt><dd>Eliminar la selección</dd></div>
+            <div><dt><kbd>Ctrl</kbd> <kbd>Z</kbd></dt><dd>Deshacer</dd></div>
+            <div><dt><kbd>0</kbd></dt><dd>Encuadrar todo el mapa</dd></div>
+          </dl>
+          <div class="help__data">
+            <h3 class="help__heading">Tus datos</h3>
+            <p>Todo se guarda en <code id="data-path">data/atlas.json</code>, junto a la aplicación. Sin cuentas y sin conexión.</p>
+            <button class="text-btn" id="reveal-data">
+              <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
+              <span>Abrir la carpeta de datos</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="menu" id="menu" role="menu" hidden>
+    <button class="menu__item" data-action="export" role="menuitem">
+      <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>
+      <span>Exportar mapa (.json)</span>
+    </button>
+    <button class="menu__item" data-action="import" role="menuitem">
+      <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>
+      <span>Importar un mapa</span>
+    </button>
+    <div class="menu__sep"></div>
+    <button class="menu__item" data-action="reveal" role="menuitem">
+      <svg class="icon" aria-hidden="true"><use href="#i-machine"/></svg>
+      <span>Abrir carpeta de datos</span>
+    </button>
+    <button class="menu__item" data-action="help" role="menuitem">
+      <svg class="icon" aria-hidden="true"><use href="#i-focus"/></svg>
+      <span>Atajos y ayuda</span>
+    </button>
+  </div>
+
+  <input type="file" id="file-rail" accept="image/*" hidden>
+  <input type="file" id="file-insp" accept="image/*" hidden>
+  <input type="file" id="file-import" accept="application/json,.json" hidden>
+
+  <div class="boot" id="boot">
+    <svg class="boot__mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mark"/></svg>
+    <p class="boot__name">Concept</p>
+    <p class="boot__text">Abriendo tu mapa</p>
+  </div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

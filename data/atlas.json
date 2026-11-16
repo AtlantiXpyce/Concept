@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "title": "Sistemas complejos",
+  "createdAt": "2026-11-16T09:00:00.000Z",
+  "updatedAt": "2026-11-16T13:13:20.668Z",
+  "concepts": [
+    {
+      "id": "c_sistemas",
+      "title": "Sistemas complejos adaptativos",
+      "description": "Conjuntos de elementos que aprenden de su propio comportamiento. La adaptación ocurre cuando el sistema usa la información que produce para cambiar sus reglas.",
+      "x": 500,
+      "y": 320,
+      "color": "#2F6B57",
+      "image": null
+    },
+    {
+      "id": "c_bucles",
+      "title": "Bucles de retroalimentación",
+      "description": "El resultado de una acción vuelve al sistema como información y modifica la siguiente acción. Los bucles de refuerzo amplifican el cambio; los de equilibrio lo frenan. Casi ningún comportamiento sostenido en el tiempo se entiende sin localizar antes el bucle que lo produce.",
+      "x": 45,
+      "y": 217,
+      "color": "#B0792B",
+      "image": null
+    },
+    {
+      "id": "c_emergencia",
+      "title": "Emergencia",
+      "description": "Propiedades que aparecen cuando muchos componentes interactúan y que ninguna de las partes tiene por sí sola. Una bandada, un mercado o una conciencia no se encuentran en ninguno de sus elementos. La emergencia se describe, no se diseña directamente.",
+      "x": 900,
+      "y": 120,
+      "color": "#5A6A94",
+      "image": null
+    },
+    {
+      "id": "c_adaptacion",
+      "title": "Adaptación",
+      "description": "Capacidad de un sistema para ajustar sus reglas internas cuando cambia el entorno. Puede ser reactiva, anticipatoria o evolutiva. Las organizaciones adaptativas combinan variedad de respuestas con memoria de lo que funcionó.",
+      "x": 90,
+      "y": 450,
+      "color": "#A05A4C",
+      "image": null
+    },
+    {
+      "id": "c_limites",
+      "title": "Límites del sistema",
+      "description": "Frontera que decide qué queda dentro del análisis y qué se trata como entorno. No son hechos físicos: son decisiones de quien modela. Un límite mal trazado oculta causas externas o atribuye al sistema responsabilidades que no le corresponden.",
+      "x": 950,
+      "y": 460,
+      "color": "#4A7C86",
+      "image": null
+    },
+    {
+      "id": "c_apalancamiento",
+      "title": "Puntos de apalancamiento",
+      "description": "Lugares donde una intervención pequeña produce un cambio desproporcionado. Donella Meadows los ordena desde parámetros y flujos hasta reglas, objetivos y paradigmas. Cuanto más profundo el punto, mayor el efecto y mayor la resistencia al cambio.",
+      "x": 500,
+      "y": 640,
+      "color": "#7C6490",
+      "image": null
+    },
+    {
+      "id": "c_modelos",
+      "title": "Modelos mentales",
+      "description": "Supuestos e imágenes internas con las que interpretamos el mundo. Filtran qué datos consideramos relevantes y qué explicaciones nos resultan plausibles. Hacerlos explícitos es una de las intervenciones más eficaces en cualquier equipo.",
+      "x": 880,
+      "y": 700,
+      "color": "#B0792B",
+      "image": null
+    },
+    {
+      "id": "c_resiliencia",
+      "title": "Resiliencia",
+      "description": "Capacidad de mantener la función esencial después de una perturbación, absorbiéndola o reorganizándose. No es volver al estado anterior, sino conservar lo que hace que el sistema siga siendo él mismo.",
+      "x": 110,
+      "y": 700,
+      "color": "#A05A4C",
+      "image": null
+    }
+  ],
+  "links": [
+    {
+      "id": "l_1",
+      "from": "c_sistemas",
+      "to": "c_bucles",
+      "label": "se organiza en"
+    },
+    {
+      "id": "l_2",
+      "from": "c_sistemas",
+      "to": "c_emergencia",
+      "label": "produce"
+    },
+    {
+      "id": "l_3",
+      "from": "c_sistemas",
+      "to": "c_adaptacion",
+      "label": "se sostiene con"
+    },
+    {
+      "id": "l_4",
+      "from": "c_sistemas",
+      "to": "c_limites",
+      "label": "se recorta con"
+    },
+    {
+      "id": "l_5",
+      "from": "c_sistemas",
+      "to": "c_apalancamiento",
+      "label": "se transforma en"
+    },
+    {
+      "id": "l_6",
+      "from": "c_bucles",
+      "to": "c_emergencia",
+      "label": "genera"
+    },
+    {
+      "id": "l_7",
+      "from": "c_adaptacion",
+      "to": "c_resiliencia",
+      "label": "cultiva"
+    },
+    {
+      "id": "l_8",
+      "from": "c_modelos",
+      "to": "c_apalancamiento",
+      "label": "revelan"
+    },
+    {
+      "id": "l_9",
+      "from": "c_modelos",
+      "to": "c_limites",
+      "label": "condicionan"
+    },
+    {
+      "id": "l_10",
+      "from": "c_bucles",
+      "to": "c_apalancamiento",
+      "label": ""
+    }
+  ]
+}
