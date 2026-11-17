@@ -30,6 +30,8 @@ y abrir la dirección que aparece (normalmente `http://127.0.0.1:7311`). Sin `--
 | Ver solo un concepto y lo relacionado | Doble clic en el concepto o tecla `F`. |
 | Volver al mapa completo | **Ver el mapa completo**, `Esc` o `F` de nuevo. |
 | Buscar | Tecla `/`; las coincidencias se resaltan. |
+| Tener varios tableros | Botón **Tableros** (barra superior): crea, cambia o elimina tableros. |
+| Cambiar el idioma | Selector **ES / EN** de la barra superior. El cambio es inmediato. |
 | Moverme por el mapa | Arrastra el fondo, usa la rueda para el zoom y `0` para encuadrar todo. |
 | Deshacer un cambio | `Ctrl+Z` (rehacer con `Ctrl+Y`). |
 
@@ -52,15 +54,16 @@ El **modo foco** ordena el concepto elegido y sus vecinos en un anillo, para lee
 
 ## Tus datos
 
-- El mapa vive en **`data/atlas.json`**.
-- Las imágenes se guardan en **`data/images/`** y el mapa las referencia.
-- Cada guardado deja una copia del estado anterior en **`data/atlas.backup.json`**.
+- Cada tablero vive en su propio archivo dentro de **`data/boards/`**; **`data/boards.json`** guarda el índice con los títulos.
+- Las imágenes se guardan en **`data/images/`** y los tableros las referencian; puedes usar la misma imagen en varios tableros.
 - El guardado es automático; el indicador de la barra superior muestra si hay cambios pendientes.
-- Desde el menú **⋮** puedes **exportar** el mapa a un `.json` e **importarlo** en otro equipo. Es la forma más sencilla de hacer una copia de seguridad portátil.
+- Desde el menú **⋮** puedes **exportar** el tablero actual a un `.json` e **importarlo** en otro equipo. Es la forma más sencilla de hacer una copia de seguridad portátil.
 
-Si quieres empezar de cero con el mapa de ejemplo, cierra Concept y elimina `data/atlas.json`; al volver a abrir se copia `seed.json`. Haz antes una exportación si quieres conservar tu mapa.
+Si quieres empezar de cero con el tablero de ejemplo, cierra Concept y elimina los archivos de `data/boards/` y `data/boards.json`; al volver a abrir se copia `seed.json` como primer tablero. Haz antes una exportación si quieres conservar tus tableros.
 
-Las imágenes que dejan de usarse no se borran automáticamente: puedes limpiar `data/images/` cuando te asegures de que ningún mapa las referencia.
+El mapa antiguo en `data/atlas.json` se importa automáticamente como primer tablero la primera vez que arrancas esta versión; después queda como copia de seguridad.
+
+Las imágenes que dejan de usarse no se borran automáticamente: puedes limpiar `data/images/` cuando te asegures de que ningún tablero las referencia.
 
 ## Cómo está hecho
 
@@ -68,5 +71,5 @@ Concept no tiene dependencias ni proceso de compilación:
 
 - `server.mjs`: servidor HTTP local en Node, guardado atómico, imágenes y API mínima.
 - `public/`: interfaz en HTML, CSS y módulos ES nativos.
-- `seed.json`: mapa de ejemplo que se copia en el primer arranque.
-- `data/`: tus mapas e imágenes (no se versiona).
+- `seed.json`: mapa de ejemplo que se copia como primer tablero.
+- `data/`: tus tableros e imágenes (no se versiona).

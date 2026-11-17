@@ -3,6 +3,7 @@
 import * as store from './store.js'
 import { initUI, closeTransient, focusSearch, createConcept, deleteSelection, openHelp, notify } from './ui.js'
 import { initMap } from './map.js'
+import { loadStartup } from './boards.js'
 import { t, applyStaticTranslations } from './i18n.js'
 
 const bootEl = document.getElementById('boot')
@@ -10,10 +11,8 @@ const bootEl = document.getElementById('boot')
 async function start() {
   applyStaticTranslations()
   try {
-    const res = await fetch('/api/state', { cache: 'no-store' })
-    if (!res.ok) throw new Error('state')
-    const data = await res.json()
-    store.load(data)
+    const { doc } = await loadStartup()
+    store.load(doc, doc.id)
   } catch {
     showBootError()
     return

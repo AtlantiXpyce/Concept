@@ -4,6 +4,7 @@ import * as store from './store.js'
 import { PALETTE, state } from './store.js'
 import { uploadImage, readJsonFile, slugify, download, fold, clamp } from './utils.js'
 import { t, getLang, setLang, applyStaticTranslations } from './i18n.js'
+import * as boards from './boards.js'
 
 const $ = (sel) => document.querySelector(sel)
 const els = {}
@@ -23,6 +24,7 @@ export function initUI() {
     rail: $('#rail'),
     railToggle: $('#rail-toggle'),
     railClose: $('#rail-close'),
+    boardsButton: $('#boards-button'),
     scrim: $('#scrim'),
     newConcept: $('#new-concept'),
     emptyAdd: $('#empty-add'),
@@ -136,6 +138,12 @@ async function loadServerInfo() {
 function onStore(type, detail) {
   switch (type) {
     case 'load':
+      // Al abrir otro tablero el campo debe mostrar su título aunque tuviera
+      // el foco: el documento anterior ya no existe.
+      els.docTitle.value = state.doc.title
+      els.docTitle.style.width = ''
+      renderAll()
+      break
     case 'reload':
       renderAll()
       break
@@ -297,7 +305,9 @@ function renderFocusbar() {
   els.focusbar.hidden = false
   els.focusTitle.textContent = titleOf(center)
   const near = new Set(store.neighborsOf(center.id).map((n) => n.concept.id))
-  els.focusCount.textContent = near.size ? relationCount(near.size) : t('focus.none')
+  els.focusCount.textContent = near.size
+    ? `${near.size} ${t(near.size === 1 ? 'focus.relatedOne' : 'focus.relatedOther')}`
+    : t('focus.none')
   els.focusBack.disabled = state.focus.length < 2
 }
 
@@ -515,6 +525,8 @@ function bind() {
   els.railClose.addEventListener('click', () => closeRail())
   els.scrim.addEventListener('click', () => closeRail())
 
+  els.boardsButton.addEventListener('click', () => openBoardsPanel())
+
   els.railImage.addEventListener('click', () => els.fileRail.click())
   els.fileRail.addEventListener('change', async () => {
     const file = els.fileRail.files && els.fileRail.files[0]
@@ -639,7 +651,13 @@ function bind() {
   })
 
   document.addEventListener('pointerdown', (event) => {
-    if (popover && !popover.el.contains(event.target)) closePopover()
+    if (
+      popover &&
+      !popover.el.contains(event.target) &&
+      !event.target.closest('#boards-button')
+    ) {
+      closePopover()
+    }
     if (!els.menu.hidden && !els.menu.contains(event.target) && !event.target.closest('#menu-button')) {
       toggleMenu(false)
     }
@@ -944,6 +962,172 @@ function openEdgePopover({ linkId, x, y }) {
 
   mountPopover(el, { x: x - 140, y: y + 14, onClose: () => store.setSelectedLink(null) })
   setTimeout(() => input.select(), 30)
+}
+
+/* --------------------------------------------------------------- tableros */
+
+function openBoardsPanel() {
+  if (popover && popover.el.classList.contains('pop--boards')) {
+    closePopover()
+    return
+  }
+  const anchor = els.boardsButton.getBoundingClientRect()
+  const el = document.createElement('div')
+  el.className = 'pop pop--boards'
+  el.innerHTML = `
+    <div class="pop__head">
+      <span class="pop__title">${t('boards.title')}</span>
+      <button class="icon-btn pop__close" aria-label="${t('pop.close')}"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="boards__list" role="listbox" aria-label="${t('boards.aria')}"></div>
+    <button class="boards__new" type="button">
+      <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+      <span>${t('boards.new')}</span>
+    </button>
+  `
+  el.querySelector('.pop__close').addEventListener('click', () => closePopover())
+  el.querySelector('.boards__new').addEventListener('click', () => createNewBoard())
+  mountPopover(el, { x: anchor.left, y: anchor.bottom + 6 })
+  refreshBoardsList(el.querySelector('.boards__list'))
+}
+
+async function refreshBoardsList(listEl) {
+  // Guarda el título pendiente para que la lista muestre el nombre actual.
+  if (store.state.save !== 'saved') await store.saveNow()
+  await fillBoardsList(listEl)
+}
+
+async function fillBoardsList(listEl) {
+  let list
+  try {
+    list = await boards.listBoards()
+  } catch {
+    showToast(t('boards.switchError'))
+    closePopover()
+    return
+  }
+  if (!popover || !popover.el.contains(listEl)) return
+  listEl.replaceChildren()
+
+  for (const board of list) {
+    const active = board.id === store.state.boardId
+    const row = document.createElement('div')
+    row.className = 'boards__row'
+    if (active) row.classList.add('is-active')
+
+    const pick = document.createElement('button')
+    pick.type = 'button'
+    pick.className = 'boards__pick'
+    pick.setAttribute('role', 'option')
+    pick.setAttribute('aria-selected', String(active))
+    const name = document.createElement('span')
+    name.className = 'boards__name'
+    name.textContent = board.title.trim() || t('boards.untitled')
+    const count = document.createElement('span')
+    count.className = 'boards__count'
+    const n = Number(board.count) || 0
+    count.textContent = t(n === 1 ? 'boards.conceptOne' : 'boards.conceptOther', { n })
+    pick.append(name, count)
+    pick.addEventListener('click', () => switchBoard(board.id))
+
+    const remove = document.createElement('button')
+    remove.type = 'button'
+    remove.className = 'boards__delete'
+    remove.title = t('boards.delete')
+    remove.setAttribute('aria-label', t('boards.deleteAria', { title: name.textContent }))
+    remove.disabled = list.length <= 1
+    remove.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>'
+    remove.addEventListener('click', (event) => {
+      event.stopPropagation()
+      confirmDeleteBoard(board)
+    })
+
+    row.append(pick, remove)
+    listEl.append(row)
+  }
+}
+
+async function switchBoard(id) {
+  closePopover()
+  if (id === store.state.boardId) return
+  await saveBeforeSwitch()
+  try {
+    const doc = await boards.getBoard(id)
+    store.load(doc, id)
+    boards.rememberBoard(id)
+  } catch {
+    showToast(t('boards.switchError'))
+  }
+}
+
+async function saveBeforeSwitch() {
+  if (store.state.save === 'saved') return
+  await store.saveNow()
+}
+
+function nextBoardName(list) {
+  const base = t('boards.defaultName')
+  const used = new Set(list.map((board) => board.title.trim()))
+  let n = 1
+  while (used.has(`${base} ${n}`)) n += 1
+  return `${base} ${n}`
+}
+
+async function createNewBoard() {
+  closePopover()
+  await saveBeforeSwitch()
+  try {
+    let list = []
+    try {
+      list = await boards.listBoards()
+    } catch {}
+    const { board, doc } = await boards.createBoard(nextBoardName(list))
+    store.load(doc, board.id)
+    boards.rememberBoard(board.id)
+    setTimeout(() => {
+      els.docTitle.focus()
+      els.docTitle.select()
+    }, 80)
+  } catch {
+    showToast(t('boards.createError'))
+  }
+}
+
+async function confirmDeleteBoard(board) {
+  closePopover()
+  const name = board.title.trim() || t('boards.untitled')
+  const ok = await askConfirm({
+    title: t('boards.deleteTitle'),
+    text: t('boards.deleteText', { title: name }),
+    confirmLabel: t('boards.confirmDelete'),
+  })
+  if (!ok) return
+
+  const isCurrent = board.id === store.state.boardId
+  try {
+    if (isCurrent) store.cancelPending()
+    await boards.removeBoard(board.id)
+    if (isCurrent) {
+      const left = await boards.listBoards()
+      if (left.length) await loadFirstAvailable(left)
+    }
+    showToast(t('boards.deleted', { title: name }))
+  } catch (err) {
+    if (err && err.message === 'board-last') showToast(t('boards.last'))
+    else showToast(t('boards.deleteError'))
+  }
+}
+
+async function loadFirstAvailable(list) {
+  for (const item of list) {
+    try {
+      const doc = await boards.getBoard(item.id)
+      store.load(doc, item.id)
+      boards.rememberBoard(item.id)
+      return true
+    } catch {}
+  }
+  return false
 }
 
 /* --------------------------------------------------------------- rail móvil / menú */

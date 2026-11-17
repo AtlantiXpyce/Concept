@@ -13,6 +13,7 @@ const MAX_HISTORY = 60
 const listeners = new Set()
 
 export const state = {
+  boardId: null,
   doc: { title: '', concepts: [], links: [] },
   selection: null,
   selectedLink: null,
@@ -99,10 +100,25 @@ export function normalize(raw) {
   }
 }
 
-export function load(raw) {
+export function load(raw, boardId = null) {
+  clearTimeout(saveTimer)
+  saveTimer = null
+  saveRun += 1
+  past = []
+  future = []
+  state.boardId = boardId || (raw && raw.id) || null
   state.doc = normalize(raw)
+  state.selection = null
+  state.selectedLink = null
+  state.focus = []
+  state.query = ''
+  state.save = 'saved'
   state.ready = true
   emit('load')
+  emit('selection')
+  emit('focus')
+  emit('query')
+  emit('save')
 }
 
 /* --------------------------------------------------------------- helpers */
@@ -206,13 +222,14 @@ export function scheduleSave() {
 export async function saveNow() {
   clearTimeout(saveTimer)
   saveTimer = null
+  if (!state.boardId) return
   const run = ++saveRun
   const payload = JSON.stringify({
     ...state.doc,
     updatedAt: new Date().toISOString(),
   })
   try {
-    const res = await fetch('/api/state', {
+    const res = await fetch(`/api/boards/${encodeURIComponent(state.boardId)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: payload,
@@ -230,17 +247,23 @@ export async function saveNow() {
   }
 }
 
+export function cancelPending() {
+  clearTimeout(saveTimer)
+  saveTimer = null
+  saveRun += 1
+}
+
 export function markDirty() {
   scheduleSave()
 }
 
 export function flush() {
-  if (!saveTimer) return
+  if (!saveTimer || !state.boardId) return
   clearTimeout(saveTimer)
   saveTimer = null
   const body = JSON.stringify({ ...state.doc, updatedAt: new Date().toISOString() })
   try {
-    fetch('/api/state', {
+    fetch(`/api/boards/${encodeURIComponent(state.boardId)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body,

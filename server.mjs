@@ -7,7 +7,7 @@
 import { createServer } from 'node:http'
 import { existsSync } from 'node:fs'
 import { readFile, writeFile, mkdir, readdir, rename, unlink } from 'node:fs/promises'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -16,6 +16,8 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PUBLIC = path.join(ROOT, 'public')
 const DATA = path.join(ROOT, 'data')
 const IMAGES = path.join(DATA, 'images')
+const BOARDS_DIR = path.join(DATA, 'boards')
+const BOARDS_INDEX = path.join(DATA, 'boards.json')
 const STATE_FILE = path.join(DATA, 'atlas.json')
 const DESKTOP = process.argv.includes('--desktop')
 const START_PORT = 7311
@@ -51,8 +53,9 @@ let hasClient = false
 let byeAt = 0
 
 await mkdir(IMAGES, { recursive: true })
+await mkdir(BOARDS_DIR, { recursive: true })
 
-await ensureState()
+await ensureBoards()
 
 async function ensureState() {
   try {
@@ -112,19 +115,181 @@ function readJson(req, limit) {
   })
 }
 
-async function writeState(state) {
+function isBoardId(id) {
+  return typeof id === 'string' && /^b_[a-z0-9]{4,40}$/.test(id)
+}
+
+function boardFile(id) {
+  return isBoardId(id) ? path.join(BOARDS_DIR, `${id}.json`) : null
+}
+
+function newBoardId() {
+  return `b_${randomBytes(6).toString('hex')}`
+}
+
+function metaOf(doc, id) {
+  return {
+    id,
+    title: typeof doc.title === 'string' ? doc.title.trim().slice(0, 140) : '',
+    createdAt: typeof doc.createdAt === 'string' ? doc.createdAt : new Date().toISOString(),
+    updatedAt: typeof doc.updatedAt === 'string' ? doc.updatedAt : new Date().toISOString(),
+    count: Array.isArray(doc.concepts) ? doc.concepts.length : 0,
+  }
+}
+
+async function readBoardsIndex() {
+  try {
+    const raw = await readFile(BOARDS_INDEX, 'utf8')
+    const list = JSON.parse(raw)
+    if (!Array.isArray(list)) return []
+    return list
+      .filter((item) => item && isBoardId(item.id))
+      .map((item) => ({
+        id: item.id,
+        title: typeof item.title === 'string' ? item.title.slice(0, 140) : '',
+        createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
+        updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : new Date().toISOString(),
+        count: Number.isFinite(item.count) ? item.count : 0,
+      }))
+  } catch {
+    return []
+  }
+}
+
+async function writeBoardsIndex(list) {
+  const tmp = BOARDS_INDEX + '.tmp'
+  await writeFile(tmp, JSON.stringify(list, null, 2), 'utf8')
+  await rename(tmp, BOARDS_INDEX)
+}
+
+// Las escrituras de tableros se encadenan para que dos guardados seguidos
+// no compartan el mismo archivo temporal ni dejen el índice a medias.
+let boardQueue = Promise.resolve()
+
+function serialized(task) {
+  const run = boardQueue.then(task, task)
+  boardQueue = run.catch(() => {})
+  return run
+}
+
+async function scanBoards() {
+  const files = (await readdir(BOARDS_DIR)).filter((file) => /^b_[a-z0-9]+\.json$/.test(file))
+  const found = []
+  for (const file of files) {
+    try {
+      const doc = JSON.parse(await readFile(path.join(BOARDS_DIR, file), 'utf8'))
+      found.push(metaOf(doc, path.basename(file, '.json')))
+    } catch {}
+  }
+  found.sort(
+    (a, b) =>
+      String(a.createdAt).localeCompare(String(b.createdAt)) || a.id.localeCompare(b.id),
+  )
+  return found
+}
+
+async function ensureBoards() {
+  // Se reconstruye el índice a partir de los tableros que existen: así se
+  // recuperan archivos huérfanos y desaparecen las entradas rotas.
+  const found = await scanBoards()
+  if (found.length) {
+    const index = await readBoardsIndex()
+    const same =
+      index.length === found.length &&
+      index.every(
+        (item, i) =>
+          item.id === found[i].id &&
+          item.title === found[i].title &&
+          item.count === found[i].count &&
+          item.updatedAt === found[i].updatedAt,
+      )
+    if (!same) await writeBoardsIndex(found)
+    return
+  }
+
+  // Primera vez: el mapa antiguo (o el de ejemplo) pasa a ser el primer tablero.
+  await ensureState()
+  let doc
+  try {
+    doc = JSON.parse(await readFile(STATE_FILE, 'utf8'))
+  } catch {
+    doc = JSON.parse(await readFile(path.join(ROOT, 'seed.json'), 'utf8'))
+  }
+  const id = newBoardId()
+  const now = new Date().toISOString()
+  doc.id = id
+  doc.createdAt ||= now
+  doc.updatedAt = now
+  await writeFile(boardFile(id), JSON.stringify(doc, null, 2), 'utf8')
+  await writeBoardsIndex([metaOf(doc, id)])
+}
+
+async function readBoard(id) {
+  const file = boardFile(id)
+  if (!file) throw Object.assign(new Error('bad-board'), { status: 400 })
+  try {
+    return JSON.parse(await readFile(file, 'utf8'))
+  } catch {
+    throw Object.assign(new Error('board-missing'), { status: 404 })
+  }
+}
+
+async function writeBoard(id, state) {
+  if (!isBoardId(id)) throw Object.assign(new Error('bad-board'), { status: 400 })
   if (!state || !Array.isArray(state.concepts) || !Array.isArray(state.links)) {
     throw Object.assign(new Error('invalid-state'), { status: 400 })
   }
-  state.updatedAt = new Date().toISOString()
-  const body = JSON.stringify(state, null, 2)
-  const tmp = STATE_FILE + '.tmp'
-  await writeFile(tmp, body, 'utf8')
+  const existing = await readBoard(id)
+  const now = new Date().toISOString()
+  state.id = id
+  state.version = 1
+  state.title = typeof state.title === 'string' ? state.title.slice(0, 140) : ''
+  state.createdAt = existing.createdAt || state.createdAt || now
+  state.updatedAt = now
+
+  const file = boardFile(id)
+  const tmp = `${file}.tmp`
+  await writeFile(tmp, JSON.stringify(state, null, 2), 'utf8')
+  await rename(tmp, file)
+
+  const index = await readBoardsIndex()
+  const meta = metaOf(state, id)
+  const at = index.findIndex((item) => item.id === id)
+  if (at >= 0) index[at] = meta
+  else index.push(meta)
+  await writeBoardsIndex(index)
+}
+
+async function createBoard(title) {
+  const id = newBoardId()
+  const now = new Date().toISOString()
+  const doc = {
+    version: 1,
+    id,
+    title: typeof title === 'string' ? title.slice(0, 140) : '',
+    createdAt: now,
+    updatedAt: now,
+    concepts: [],
+    links: [],
+  }
+  await writeFile(boardFile(id), JSON.stringify(doc, null, 2), 'utf8')
+  const index = await readBoardsIndex()
+  index.push(metaOf(doc, id))
+  await writeBoardsIndex(index)
+  return { board: metaOf(doc, id), doc }
+}
+
+async function deleteBoard(id) {
+  const file = boardFile(id)
+  if (!file) throw Object.assign(new Error('bad-board'), { status: 400 })
+  const index = await readBoardsIndex()
+  if (index.length <= 1) throw Object.assign(new Error('board-last'), { status: 409 })
   try {
-    const prev = await readFile(STATE_FILE)
-    await writeFile(path.join(DATA, 'atlas.backup.json'), prev)
-  } catch {}
-  await rename(tmp, STATE_FILE)
+    await unlink(file)
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw Object.assign(new Error('board-missing'), { status: 404 })
+  }
+  await writeBoardsIndex(index.filter((item) => item.id !== id))
 }
 
 function safeJoin(base, requestPath) {
@@ -153,18 +318,34 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost')
   const pathname = url.pathname
   try {
-    if (pathname === '/api/state') {
+    if (pathname === '/api/boards') {
       if (req.method === 'GET') {
-        const raw = await readFile(STATE_FILE, 'utf8')
-        send(res, 200, raw, {
-          'Content-Type': 'application/json; charset=utf-8',
-          'Cache-Control': 'no-store',
-        })
+        json(res, 200, { boards: await readBoardsIndex() })
+        return
+      }
+      if (req.method === 'POST') {
+        const body = await readJson(req, 256 * 1024)
+        json(res, 201, await serialized(() => createBoard(body.title)))
+        return
+      }
+      send(res, 405, 'Método no permitido')
+      return
+    }
+
+    if (pathname.startsWith('/api/boards/')) {
+      const id = decodeURIComponent(pathname.slice('/api/boards/'.length))
+      if (req.method === 'GET') {
+        json(res, 200, await readBoard(id))
         return
       }
       if (req.method === 'PUT') {
         const state = await readJson(req, 12 * 1024 * 1024)
-        await writeState(state)
+        await serialized(() => writeBoard(id, state))
+        json(res, 200, { ok: true })
+        return
+      }
+      if (req.method === 'DELETE') {
+        await serialized(() => deleteBoard(id))
         json(res, 200, { ok: true })
         return
       }
@@ -219,7 +400,7 @@ const server = createServer(async (req, res) => {
     }
 
     if (pathname === '/api/info') {
-      json(res, 200, { dataDir: DATA, version: 1 })
+      json(res, 200, { dataDir: BOARDS_DIR, version: 1 })
       return
     }
 
@@ -244,6 +425,12 @@ const server = createServer(async (req, res) => {
     const status = err.status || 500
     if (status === 413) {
       json(res, 413, { error: 'file-too-large' })
+    } else if (status === 409) {
+      json(res, 409, { error: 'board-last' })
+    } else if (status === 404) {
+      json(res, 404, { error: 'board-missing' })
+    } else if (status === 400) {
+      json(res, 400, { error: 'bad-request' })
     } else {
       console.error('[concept]', err)
       json(res, status, { error: 'server-error' })
@@ -263,7 +450,7 @@ function listen(port, attempt = 0) {
   server.listen(port, '127.0.0.1', () => {
     const address = `http://127.0.0.1:${port}`
     console.log(`\n  Concept está en marcha.\n  ${address}\n`)
-    console.log(`  Tus datos: ${STATE_FILE}`)
+    console.log(`  Tus datos: ${BOARDS_DIR}`)
     console.log('  Cierra esta ventana para detener la aplicación.\n')
     if (DESKTOP) openWindow(address)
   })

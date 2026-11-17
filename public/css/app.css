@@ -1209,6 +1209,89 @@ kbd {
 .pop__danger:hover { text-decoration: underline; text-underline-offset: 2px; }
 .pop__hint { font-size: 10.5px; color: var(--muted); }
 
+/* ---------------------------------------------------------------- tableros */
+
+.boards__toggle { margin-left: -4px; }
+
+.pop--boards { width: 272px; }
+.boards__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-height: 286px;
+  overflow-y: auto;
+}
+.boards__row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 6px;
+  transition: background 0.12s;
+}
+.boards__row:hover { background: var(--paper-2); }
+.boards__row.is-active { background: var(--pine-wash); }
+.boards__pick {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-2);
+  text-align: left;
+}
+.boards__row.is-active .boards__pick { color: var(--pine-deep); }
+.boards__name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 550;
+}
+.boards__count { font-size: 10px; color: var(--muted); }
+.boards__row.is-active .boards__count { color: var(--pine); }
+.boards__delete {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 4px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.12s, background 0.12s, color 0.12s;
+}
+.boards__row:hover .boards__delete,
+.boards__delete:focus-visible { opacity: 1; }
+.boards__delete:hover:not(:disabled) { background: var(--danger-wash); color: var(--danger); }
+.boards__delete:disabled { cursor: default; }
+.boards__delete .icon { width: 14px; height: 14px; }
+.boards__new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 5px;
+  padding: 8px 9px 6px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--pine-deep);
+  font-size: 12.5px;
+  font-weight: 550;
+  text-align: left;
+}
+.boards__new:hover { background: var(--pine-wash); }
+.boards__new .icon { width: 15px; height: 15px; }
+
 /* ---------------------------------------------------------------- mobile rail / scrim */
 
 .scrim {

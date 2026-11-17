@@ -63,6 +63,7 @@ function onStore(type, detail) {
   switch (type) {
     case 'load':
       cancelLayout()
+      layoutPositions.clear()
       renderNodes()
       renderEdges()
       requestAnimationFrame(() => fitAll({ animate: false }))
