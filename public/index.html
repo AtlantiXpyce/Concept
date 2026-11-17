@@ -63,6 +63,14 @@
         </div>
       </div>
 
+      <div class="tagfilter" id="tag-filter" hidden>
+        <div class="tagfilter__head">
+          <span class="tagfilter__label" data-i18n="tags.filter">Etiquetas</span>
+          <button class="tagfilter__clear" id="tag-clear" type="button" hidden data-i18n="tags.clear">Limpiar</button>
+        </div>
+        <div class="tagfilter__chips" id="tag-chips" role="group" aria-label="Filtrar el mapa por etiquetas" data-i18n-aria="tags.aria"></div>
+      </div>
+
       <div class="rail__section">
         <div class="rail__label">
           <span id="list-label">Conceptos</span>
@@ -225,6 +233,23 @@
 
         <section class="field">
           <div class="field__head">
+            <span class="field__label" data-i18n="inspector.tags">Etiquetas</span>
+            <span class="field__note" data-i18n="inspector.tagsNote">Filtra el mapa desde el índice</span>
+          </div>
+          <div class="tag-editor">
+            <ul class="tag-editor__list" id="tag-list"></ul>
+            <div class="tag-editor__row">
+              <input class="tag-editor__input" id="tag-input" type="text" maxlength="32" autocomplete="off" spellcheck="false" placeholder="Añadir etiqueta…" aria-label="Añadir una etiqueta al concepto" data-i18n-placeholder="inspector.tagPlaceholder" data-i18n-aria="inspector.tagAria">
+              <button class="tag-editor__add" id="tag-add" type="button" title="Añadir etiqueta" aria-label="Añadir etiqueta" data-i18n-title="inspector.addTag" data-i18n-aria="inspector.addTag">
+                <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+              </button>
+            </div>
+            <div class="tag-editor__suggestions" id="tag-suggestions" hidden></div>
+          </div>
+        </section>
+
+        <section class="field">
+          <div class="field__head">
             <span class="field__label" data-i18n="inspector.color">Color</span>
             <span class="field__note" data-i18n="inspector.colorNote">Marca el trazo en el mapa</span>
           </div>
@@ -285,6 +310,7 @@
             <div><dt data-i18n="help.dragBg">Arrastrar el fondo</dt><dd data-i18n="help.dragBgDesc">Mover el mapa</dd></div>
             <div><dt data-i18n="help.dropImage">Soltar una imagen</dt><dd data-i18n="help.dropImageDesc">Añadirla como concepto visual</dd></div>
             <div><dt data-i18n="help.dblclickNode">Doble clic en un concepto</dt><dd data-i18n="help.dblclickNodeDesc">Aislarlo con sus relacionados</dd></div>
+            <div><dt data-i18n="help.tags">Etiquetas</dt><dd data-i18n="help.tagsDesc">Clasifica un concepto y filtra el mapa desde el índice</dd></div>
           </dl>
         </div>
         <div class="help__col">

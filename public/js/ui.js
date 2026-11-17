@@ -11,6 +11,7 @@ const els = {}
 
 let popover = null
 let inspectorWasOpen = false
+let tagsForId = null
 
 const announce = (type, detail = {}) =>
   window.dispatchEvent(new CustomEvent(`concept:${type}`, { detail }))
@@ -34,6 +35,9 @@ export function initUI() {
     fileImport: $('#file-import'),
     search: $('#search'),
     searchNone: $('#search-none'),
+    tagFilter: $('#tag-filter'),
+    tagChips: $('#tag-chips'),
+    tagClear: $('#tag-clear'),
     conceptList: $('#concept-list'),
     conceptCount: $('#concept-count'),
     listLabel: $('#list-label'),
@@ -67,6 +71,10 @@ export function initUI() {
     kindTick: $('#kind-tick'),
     inspTitle: $('#insp-title'),
     inspDesc: $('#insp-desc'),
+    tagList: $('#tag-list'),
+    tagInput: $('#tag-input'),
+    tagAdd: $('#tag-add'),
+    tagSuggestions: $('#tag-suggestions'),
     inspImage: $('#insp-image'),
     inspImageImg: $('#insp-image-img'),
     addImage: $('#add-image'),
@@ -153,13 +161,20 @@ function onStore(type, detail) {
       break
     case 'concepts':
       renderRail()
+      renderTagFilter()
       renderEmptyState()
       renderFocusbar()
       if (state.selection) renderInspector()
       break
     case 'concept':
       renderRail()
+      renderTagFilter()
       if (detail.history) renderInspector()
+      break
+    case 'tags':
+      renderTagFilter()
+      renderRail()
+      renderFocusbar()
       break
     case 'links':
       renderRail()
@@ -197,6 +212,7 @@ function renderAll() {
   syncDocTitle()
   if (document.activeElement !== els.search && state.query !== els.search.value) els.search.value = state.query
   renderRail()
+  renderTagFilter()
   renderFocusbar()
   renderInspector()
   renderSave()
@@ -221,18 +237,22 @@ function visibleConcepts() {
   if (query) {
     list = list.filter((c) => fold(`${c.title} ${c.description}`).includes(query))
   }
+  if (state.tagFilter.length) {
+    list = list.filter((c) => store.matchesTagFilter(c))
+  }
   return list
 }
 
 function renderRail() {
   const focus = store.focusSet()
   const query = fold(state.query)
+  const filtering = Boolean(query) || state.tagFilter.length > 0
   const list = visibleConcepts()
   const total = state.doc.concepts.length
 
   els.listLabel.textContent = focus ? t('rail.focus') : t('rail.concepts')
-  els.conceptCount.textContent = query ? t('rail.countOf', { shown: list.length, total }) : String(total)
-  els.searchNone.hidden = !(query && !list.length)
+  els.conceptCount.textContent = filtering ? t('rail.countOf', { shown: list.length, total }) : String(total)
+  els.searchNone.hidden = !(filtering && !list.length)
   els.conceptList.replaceChildren()
 
   const fragment = document.createDocumentFragment()
@@ -272,6 +292,26 @@ function renderRail() {
     const snippet = concept.description.replace(/\s+/g, ' ').trim()
     sub.textContent = snippet.length > 58 ? `${snippet.slice(0, 58)}…` : snippet
     text.append(title, sub)
+
+    const tags = store.tagsOf(concept)
+    if (tags.length) {
+      const tagRow = document.createElement('span')
+      tagRow.className = 'concept__tags'
+      tagRow.title = tags.join(' · ')
+      for (const tag of tags.slice(0, 2)) {
+        const chip = document.createElement('span')
+        chip.className = 'concept__tag'
+        chip.textContent = tag
+        tagRow.append(chip)
+      }
+      if (tags.length > 2) {
+        const more = document.createElement('span')
+        more.className = 'concept__tag concept__tag--more'
+        more.textContent = `+${tags.length - 2}`
+        tagRow.append(more)
+      }
+      text.append(tagRow)
+    }
     button.append(text)
 
     const rel = document.createElement('span')
@@ -292,6 +332,46 @@ function renderRail() {
   els.conceptList.append(fragment)
 }
 
+function renderTagFilter() {
+  const tags = store.allTags()
+  const active = new Set(state.tagFilter)
+  els.tagFilter.hidden = tags.length === 0
+  els.tagClear.hidden = active.size === 0
+  els.tagChips.replaceChildren()
+  if (!tags.length) return
+
+  const fragment = document.createDocumentFragment()
+  for (const tag of tags) {
+    const selected = active.has(tag.key)
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'tag-chip'
+    button.dataset.tag = tag.key
+    button.classList.toggle('is-active', selected)
+    button.setAttribute('aria-pressed', String(selected))
+
+    const label = document.createElement('span')
+    label.className = 'tag-chip__label'
+    label.textContent = tag.label
+    const count = document.createElement('span')
+    count.className = 'tag-chip__count'
+    count.textContent = String(tag.count)
+    button.append(label, count)
+
+    const countText = t(tag.count === 1 ? 'tags.conceptOne' : 'tags.conceptOther', {
+      n: tag.count,
+    })
+    button.title = t(selected ? 'tags.removeFilter' : 'tags.addFilter', {
+      tag: tag.label,
+      count: countText,
+    })
+    button.setAttribute('aria-label', button.title)
+    button.addEventListener('click', () => store.toggleTagFilter(tag.key))
+    fragment.append(button)
+  }
+  els.tagChips.append(fragment)
+}
+
 /* --------------------------------------------------------------- foco */
 
 function renderFocusbar() {
@@ -304,9 +384,11 @@ function renderFocusbar() {
   els.doc.hidden = true
   els.focusbar.hidden = false
   els.focusTitle.textContent = titleOf(center)
-  const near = new Set(store.neighborsOf(center.id).map((n) => n.concept.id))
-  els.focusCount.textContent = near.size
-    ? `${near.size} ${t(near.size === 1 ? 'focus.relatedOne' : 'focus.relatedOther')}`
+  const near = store
+    .neighborsOf(center.id)
+    .filter((entry) => store.matchesTagFilter(entry.concept))
+  els.focusCount.textContent = near.length
+    ? `${near.length} ${t(near.length === 1 ? 'focus.relatedOne' : 'focus.relatedOther')}`
     : t('focus.none')
   els.focusBack.disabled = state.focus.length < 2
 }
@@ -321,6 +403,9 @@ function renderEmptyState() {
 function renderInspector() {
   const concept = state.selection ? store.getConcept(state.selection) : null
   if (!concept) {
+    tagsForId = null
+    els.tagInput.value = ''
+    els.tagSuggestions.hidden = true
     if (inspectorWasOpen) {
       inspectorWasOpen = false
       announce('inspector', { open: false })
@@ -357,8 +442,85 @@ function renderInspector() {
   }
 
   renderSwatches(concept)
+  renderTags(concept)
   renderConnections(concept)
   renderIsolate(concept)
+}
+
+function renderTags(concept) {
+  if (tagsForId !== concept.id) {
+    tagsForId = concept.id
+    els.tagInput.value = ''
+  }
+
+  const tags = store.tagsOf(concept)
+  els.tagList.replaceChildren()
+  for (const tag of tags) {
+    const li = document.createElement('li')
+    li.className = 'tag-pill'
+    const label = document.createElement('span')
+    label.className = 'tag-pill__label'
+    label.textContent = tag
+    const remove = document.createElement('button')
+    remove.type = 'button'
+    remove.className = 'tag-pill__remove'
+    remove.title = t('tags.remove', { tag })
+    remove.setAttribute('aria-label', remove.title)
+    remove.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>'
+    remove.addEventListener('click', () => store.removeTag(concept.id, tag))
+    li.append(label, remove)
+    els.tagList.append(li)
+  }
+  els.tagInput.placeholder = t('inspector.tagPlaceholder')
+  renderTagSuggestions(concept)
+}
+
+function renderTagSuggestions(concept) {
+  if (document.activeElement !== els.tagInput) {
+    els.tagSuggestions.hidden = true
+    return
+  }
+  const taken = new Set(store.tagsOf(concept).map(fold))
+  const query = fold(els.tagInput.value)
+  const matches = store
+    .allTags()
+    .filter((tag) => !taken.has(tag.key) && (!query || tag.key.includes(query)))
+    .slice(0, 8)
+
+  els.tagSuggestions.replaceChildren()
+  if (!matches.length) {
+    els.tagSuggestions.hidden = true
+    return
+  }
+  els.tagSuggestions.hidden = false
+  for (const tag of matches) {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'tag-suggestion'
+    button.textContent = tag.label
+    button.title = t('inspector.addTag')
+    button.addEventListener('pointerdown', (event) => event.preventDefault())
+    button.addEventListener('click', () => {
+      const result = store.addTag(concept.id, tag.label)
+      if (!result.ok) return
+      els.tagInput.value = ''
+      renderTagSuggestions(store.getConcept(concept.id) || concept)
+      els.tagInput.focus({ preventScroll: true })
+    })
+    els.tagSuggestions.append(button)
+  }
+}
+
+function addTagFromInput(conceptId = state.selection) {
+  const concept = conceptId ? store.getConcept(conceptId) : null
+  if (!concept) return
+  const result = store.addTag(concept.id, els.tagInput.value)
+  if (result.ok || result.reason === 'duplicate') {
+    els.tagInput.value = ''
+    renderTagSuggestions(store.getConcept(concept.id) || concept)
+  } else if (result.reason === 'limit') {
+    showToast(t('tags.limit', { max: store.TAG_LIMIT }))
+  }
 }
 
 function renderSwatches(concept) {
@@ -601,6 +763,45 @@ function bind() {
   els.inspDesc.addEventListener('input', () => {
     store.updateConcept(state.selection, { description: els.inspDesc.value })
   })
+
+  els.tagAdd.addEventListener('click', () => {
+    addTagFromInput()
+    els.tagInput.focus({ preventScroll: true })
+  })
+  els.tagInput.addEventListener('input', () => {
+    const concept = state.selection ? store.getConcept(state.selection) : null
+    if (concept) renderTagSuggestions(concept)
+  })
+  els.tagInput.addEventListener('focus', () => {
+    const concept = state.selection ? store.getConcept(state.selection) : null
+    if (concept) renderTagSuggestions(concept)
+  })
+  els.tagInput.addEventListener('blur', () => {
+    if (els.tagInput.value.trim()) addTagFromInput()
+    setTimeout(() => {
+      if (document.activeElement !== els.tagInput) els.tagSuggestions.hidden = true
+    }, 120)
+  })
+  els.tagInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault()
+      addTagFromInput()
+      return
+    }
+    if (event.key === 'Backspace' && !els.tagInput.value && state.selection) {
+      const concept = store.getConcept(state.selection)
+      const last = concept ? store.tagsOf(concept).at(-1) : null
+      if (last) store.removeTag(concept.id, last)
+      return
+    }
+    if (event.key === 'Escape') {
+      els.tagInput.value = ''
+      els.tagSuggestions.hidden = true
+      els.tagInput.blur()
+    }
+  })
+
+  els.tagClear.addEventListener('click', () => store.clearTagFilter())
 
   els.addImage.addEventListener('click', () => els.fileInsp.click())
   els.fileInsp.addEventListener('change', async () => {

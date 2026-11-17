@@ -110,6 +110,14 @@ function onStore(type, detail) {
     case 'query':
       applyClasses()
       break
+    case 'tags':
+      if (state.focus.length) {
+        applyFocus()
+        break
+      }
+      applyClasses()
+      if (detail.fit) fitVisible({ animate: true })
+      break
   }
 }
 
@@ -138,9 +146,11 @@ function buildNode(concept, index) {
   title.className = 'node__title'
   const desc = document.createElement('p')
   desc.className = 'node__desc'
+  const tags = document.createElement('div')
+  tags.className = 'node__tags'
   const meta = document.createElement('div')
   meta.className = 'node__meta'
-  body.append(title, desc, meta)
+  body.append(title, desc, tags, meta)
   el.append(body)
 
   const handle = document.createElement('button')
@@ -207,10 +217,12 @@ function paintNode(el, concept) {
   el.setAttribute('aria-label', nodeLabel(concept))
   const title = el.querySelector('.node__title')
   const desc = el.querySelector('.node__desc')
+  const tags = el.querySelector('.node__tags')
   const meta = el.querySelector('.node__meta')
   const handle = el.querySelector('.node__handle')
   title.textContent = concept.title.trim() || t('concept.untitledShort')
   desc.textContent = concept.description
+  paintTags(tags, concept)
   const n = store.linksOf(concept.id).length
   meta.textContent = n ? relationCount(n) : ''
   if (handle) {
@@ -218,6 +230,28 @@ function paintNode(el, concept) {
     handle.setAttribute('aria-label', t('node.dragAria', { title: concept.title.trim() || t('concept.untitled') }))
   }
   el.querySelector('.node__spine').style.background = concept.color
+}
+
+function paintTags(container, concept) {
+  if (!container) return
+  const tags = store.tagsOf(concept)
+  container.replaceChildren()
+  container.hidden = !tags.length
+  if (!tags.length) return
+  for (const tag of tags.slice(0, 3)) {
+    const chip = document.createElement('span')
+    chip.className = 'node__tag'
+    chip.textContent = tag
+    chip.title = tag
+    container.append(chip)
+  }
+  if (tags.length > 3) {
+    const more = document.createElement('span')
+    more.className = 'node__tag node__tag--more'
+    more.textContent = `+${tags.length - 3}`
+    more.title = tags.slice(3).join(' · ')
+    container.append(more)
+  }
 }
 
 function renderNodes() {
@@ -414,13 +448,16 @@ function applyClasses() {
   const focus = store.focusSet()
   const centerId = state.focus[state.focus.length - 1]
   const query = state.query.trim().toLocaleLowerCase('es')
+  const filtering = state.tagFilter.length > 0
 
   for (const [id, el] of nodeEls) {
     const concept = store.getConcept(id)
     if (!concept) continue
+    const tagOk = !filtering || store.matchesTagFilter(concept)
     el.classList.toggle('is-selected', state.selection === id)
     el.classList.toggle('is-center', centerId === id)
     el.classList.toggle('is-dim', Boolean(focus) && !focus.has(id))
+    el.classList.toggle('is-tag-dim', !tagOk)
     const hit = query
       ? `${concept.title} ${concept.description}`.toLocaleLowerCase('es').includes(query)
       : false
@@ -432,7 +469,12 @@ function applyClasses() {
     if (!link) continue
     const inFocus = !focus || (focus.has(link.from) && focus.has(link.to))
     const touchesCenter = centerId && (link.from === centerId || link.to === centerId)
+    const from = store.getConcept(link.from)
+    const to = store.getConcept(link.to)
+    const tagOk =
+      !filtering || (Boolean(from) && Boolean(to) && store.matchesTagFilter(from) && store.matchesTagFilter(to))
     group.classList.toggle('is-dim', !inFocus)
+    group.classList.toggle('is-tag-dim', !tagOk)
     group.classList.toggle('is-focus', Boolean(touchesCenter) && Boolean(focus))
     group.classList.toggle('is-selected', state.selectedLink === link.id)
   }
@@ -451,7 +493,10 @@ function computeFocusLayout() {
 
   const centerBox = boxOf(centerId)
   const centerPos = nodePos(centerId)
-  const neighbors = store.neighborsOf(centerId).map((entry) => entry.concept)
+  const neighbors = store
+    .neighborsOf(centerId)
+    .map((entry) => entry.concept)
+    .filter((concept) => store.matchesTagFilter(concept))
   const focusIds = new Set([centerId, ...neighbors.map((concept) => concept.id)])
   const positions = new Map()
 
@@ -672,6 +717,17 @@ function fitBounds(bounds, { animate = true, pad = null } = {}) {
 
 function fitAll(options) {
   fitBounds(boundsOf(), options)
+}
+
+function fitVisible({ animate = true } = {}) {
+  if (!state.tagFilter.length) {
+    fitAll({ animate })
+    return
+  }
+  const ids = new Set(
+    state.doc.concepts.filter((concept) => store.matchesTagFilter(concept)).map((concept) => concept.id),
+  )
+  fitBounds(ids.size ? boundsOf(ids) : boundsOf(), { animate })
 }
 
 function centerOn(id) {
@@ -1130,6 +1186,6 @@ function bind() {
         return
       }
     }
-    fitAll({ animate: true })
+    fitVisible({ animate: true })
   })
 }

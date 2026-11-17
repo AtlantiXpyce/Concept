@@ -26,7 +26,9 @@ y abrir la dirección que aparece (normalmente `http://127.0.0.1:7311`). Sin `--
 | Añadir una imagen | Botón **Imagen**, arrastra un archivo al lienzo o pega una imagen con `Ctrl+V`. |
 | Relacionar dos conceptos | Arrastra el tirador del borde de un concepto hasta otro. |
 | Etiquetar o borrar una relación | Haz clic sobre la línea. |
-| Describir un concepto | Haz clic en él: el panel lateral tiene título, descripción, imagen y relaciones. |
+| Describir un concepto | Haz clic en él: el panel lateral tiene título, descripción, etiquetas, imagen y relaciones. |
+| Etiquetar un concepto | Escribe la etiqueta en **Etiquetas**, dentro de su ficha, y pulsa `Intro`. |
+| Filtrar por etiquetas | Pulsa una o varias etiquetas bajo el buscador del índice; el mapa y la lista se reducen a lo etiquetado. |
 | Ver solo un concepto y lo relacionado | Doble clic en el concepto o tecla `F`. |
 | Volver al mapa completo | **Ver el mapa completo**, `Esc` o `F` de nuevo. |
 | Buscar | Tecla `/`; las coincidencias se resaltan. |
