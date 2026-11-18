@@ -188,8 +188,6 @@ function buildNode(concept, index) {
     spine.className = 'node__spine'
     el.append(spine)
 
-    if (concept.image) el.append(buildMedia(concept))
-
     const body = document.createElement('div')
     body.className = 'node__body'
     const title = document.createElement('h3')
@@ -213,6 +211,7 @@ function buildNode(concept, index) {
     })
     handle.addEventListener('click', (event) => event.stopPropagation())
     el.append(handle)
+    syncNodeMedia(el, concept)
   }
 
   paintNode(el, concept)
@@ -237,19 +236,37 @@ function buildNode(concept, index) {
   return el
 }
 
-function buildMedia(concept) {
-  const media = document.createElement('div')
-  media.className = 'node__media'
-  const img = document.createElement('img')
-  img.src = concept.image
-  img.alt = ''
-  img.draggable = false
-  img.addEventListener('load', () => {
-    measure(concept.id)
-    scheduleEdges()
-  })
-  media.append(img)
-  return media
+
+
+function syncNodeMedia(el, concept) {
+  if (isGraphMode() || el.classList.contains('node--graph')) {
+    const existing = el.querySelector(':scope > .node__media')
+    if (existing) existing.remove()
+    return
+  }
+  const src = store.visibleMapImage(concept)
+  let media = el.querySelector(':scope > .node__media')
+  if (!src) {
+    if (media) media.remove()
+    return
+  }
+  if (!media) {
+    media = document.createElement('div')
+    media.className = 'node__media'
+    const img = document.createElement('img')
+    img.alt = ''
+    img.draggable = false
+    img.addEventListener('load', () => {
+      measure(concept.id)
+      scheduleEdges()
+    })
+    media.append(img)
+    const body = el.querySelector(':scope > .node__body')
+    if (body) el.insertBefore(media, body)
+    else el.append(media)
+  }
+  const img = media.querySelector('img')
+  if (img && img.getAttribute('src') !== src) img.src = src
 }
 
 function relationCount(n) {
@@ -280,9 +297,12 @@ function paintNode(el, concept) {
     el.style.setProperty('--graph-tag-size', `${graphTagSize(d)}px`)
     const tags = el.querySelector('.node__tags')
     if (tags) paintTags(tags, concept)
+    const media = el.querySelector(':scope > .node__media')
+    if (media) media.remove()
     return
   }
 
+  syncNodeMedia(el, concept)
   const desc = el.querySelector('.node__desc')
   const tags = el.querySelector('.node__tags')
   const meta = el.querySelector('.node__meta')
@@ -1188,14 +1208,25 @@ function bindImages() {
       notify(t('toast.notImage'))
       return
     }
+    const targetNode = event.target.closest?.('.node')
+    const targetId = targetNode?.dataset.id
     const point = screenToWorld(event.clientX, event.clientY)
     let index = 0
     for (const file of files) {
       try {
         const url = await uploadImage(file)
-        const offset = index * 34
-        const spot = findFreeSpot(Math.round(point.x - NODE_W / 2 + offset), Math.round(point.y - DEFAULT_H / 2 + offset), NODE_W, 220)
-        store.addConcept({ x: spot.x, y: spot.y, image: url })
+        if (targetId && store.getConcept(targetId)) {
+          store.addConceptImage(targetId, url, { history: true })
+        } else {
+          const offset = index * 34
+          const spot = findFreeSpot(
+            Math.round(point.x - NODE_W / 2 + offset),
+            Math.round(point.y - DEFAULT_H / 2 + offset),
+            NODE_W,
+            220,
+          )
+          store.addConcept({ x: spot.x, y: spot.y, image: url })
+        }
         index += 1
       } catch (err) {
         notify(err.message)
@@ -1213,12 +1244,14 @@ function bindImages() {
     const items = [...(event.clipboardData?.items || [])].filter((item) => item.type.startsWith('image/'))
     if (!items.length) return
     event.preventDefault()
+    const selected = state.selection && store.getConcept(state.selection) ? state.selection : null
     for (const item of items) {
       const file = item.getAsFile()
       if (!file) continue
       try {
         const url = await uploadImage(file)
-        await addImageConcept(url)
+        if (selected) store.addConceptImage(selected, url, { history: true })
+        else await addImageConcept(url)
       } catch (err) {
         notify(err.message)
       }

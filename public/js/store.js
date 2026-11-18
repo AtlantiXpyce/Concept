@@ -118,6 +118,27 @@ export function normalize(raw) {
     .filter((c) => c && typeof c === 'object' && c.id)
     .map((c) => {
       const color = PALETTE.some((p) => p.value === c.color) ? c.color : PALETTE[0].value
+      const rawImages = Array.isArray(c.images)
+        ? c.images
+        : typeof c.image === 'string' && c.image
+          ? [c.image]
+          : []
+      const images = []
+      const seenImg = new Set()
+      for (const item of rawImages) {
+        if (typeof item !== 'string' || !item || seenImg.has(item)) continue
+        seenImg.add(item)
+        images.push(item)
+      }
+      let showMapImage = typeof c.showMapImage === 'boolean' ? c.showMapImage : images.length > 0
+      let mapImage =
+        typeof c.mapImage === 'string' && images.includes(c.mapImage)
+          ? c.mapImage
+          : images[0] || null
+      if (!images.length) {
+        mapImage = null
+        showMapImage = false
+      }
       return {
         id: String(c.id),
         title: typeof c.title === 'string' ? c.title.slice(0, 180) : '',
@@ -126,7 +147,9 @@ export function normalize(raw) {
         x: Number.isFinite(c.x) ? Math.round(c.x) : 0,
         y: Number.isFinite(c.y) ? Math.round(c.y) : 0,
         color,
-        image: typeof c.image === 'string' && c.image ? c.image : null,
+        images,
+        mapImage,
+        showMapImage,
       }
     })
     .filter((c) => {
@@ -227,6 +250,17 @@ export function focusCenter() {
 }
 
 /* --------------------------------------------------------------- etiquetas */
+
+export function conceptImages(concept) {
+  return concept && Array.isArray(concept.images) ? concept.images : []
+}
+
+export function visibleMapImage(concept) {
+  if (!concept || !concept.showMapImage) return null
+  const images = conceptImages(concept)
+  if (!images.length) return null
+  return images.includes(concept.mapImage) ? concept.mapImage : images[0]
+}
 
 export function tagsOf(concept) {
   return concept && Array.isArray(concept.tags) ? concept.tags : []
@@ -529,8 +563,39 @@ export function exitFocus() {
 
 /* --------------------------------------------------------------- mutaciones */
 
-export function addConcept({ x = 0, y = 0, title = '', description = '', image = null, color = null, select = true } = {}) {
+export function addConcept({
+  x = 0,
+  y = 0,
+  title = '',
+  description = '',
+  images = null,
+  image = null,
+  mapImage = null,
+  showMapImage = undefined,
+  color = null,
+  select = true,
+} = {}) {
   remember()
+  const rawImages = Array.isArray(images)
+    ? images
+    : typeof image === 'string' && image
+      ? [image]
+      : []
+  const cleanImages = []
+  const seenImg = new Set()
+  for (const item of rawImages) {
+    if (typeof item !== 'string' || !item || seenImg.has(item)) continue
+    seenImg.add(item)
+    cleanImages.push(item)
+  }
+  let resolvedMapImage =
+    typeof mapImage === 'string' && cleanImages.includes(mapImage) ? mapImage : cleanImages[0] || null
+  let resolvedShowMapImage =
+    typeof showMapImage === 'boolean' ? showMapImage : cleanImages.length > 0
+  if (!cleanImages.length) {
+    resolvedMapImage = null
+    resolvedShowMapImage = false
+  }
   const concept = {
     id: uid('c'),
     title,
@@ -539,7 +604,9 @@ export function addConcept({ x = 0, y = 0, title = '', description = '', image =
     x: Math.round(x),
     y: Math.round(y),
     color: color || PALETTE[state.doc.concepts.length % PALETTE.length].value,
-    image: image || null,
+    images: cleanImages,
+    mapImage: resolvedMapImage,
+    showMapImage: resolvedShowMapImage,
   }
   state.doc.concepts.push(concept)
   if (select) state.selection = concept.id
@@ -554,6 +621,31 @@ export function addConcept({ x = 0, y = 0, title = '', description = '', image =
   return concept
 }
 
+function normalizeImagesInput(raw) {
+  const list = Array.isArray(raw) ? raw : []
+  const out = []
+  const seen = new Set()
+  for (const item of list) {
+    if (typeof item !== 'string' || !item || seen.has(item)) continue
+    seen.add(item)
+    out.push(item)
+  }
+  return out
+}
+
+function ensureImageState(concept) {
+  const images = conceptImages(concept)
+  if (!images.length) {
+    concept.images = []
+    concept.mapImage = null
+    concept.showMapImage = false
+    return
+  }
+  concept.images = images
+  concept.mapImage = images.includes(concept.mapImage) ? concept.mapImage : images[0]
+  if (typeof concept.showMapImage !== 'boolean') concept.showMapImage = true
+}
+
 export function updateConcept(id, patch, { history = false, save = true } = {}) {
   const concept = getConcept(id)
   if (!concept) return null
@@ -563,12 +655,79 @@ export function updateConcept(id, patch, { history = false, save = true } = {}) 
     else if (key === 'description' && typeof value === 'string') concept.description = value.slice(0, 12000)
     else if (key === 'tags') concept.tags = cleanTags(value)
     else if (key === 'color' && PALETTE.some((p) => p.value === value)) concept.color = value
-    else if (key === 'image') concept.image = value || null
-    else if ((key === 'x' || key === 'y') && Number.isFinite(value)) concept[key] = Math.round(value)
+    else if (key === 'images') {
+      concept.images = normalizeImagesInput(value)
+      ensureImageState(concept)
+    } else if (key === 'mapImage') {
+      if (typeof value === 'string' && conceptImages(concept).includes(value)) concept.mapImage = value
+      else ensureImageState(concept)
+    } else if (key === 'showMapImage') {
+      concept.showMapImage = Boolean(value)
+      ensureImageState(concept)
+    } else if (key === 'image') {
+      if (value && typeof value === 'string') {
+        concept.images = [value]
+        concept.mapImage = value
+        concept.showMapImage = true
+      } else {
+        concept.images = []
+        concept.mapImage = null
+        concept.showMapImage = false
+      }
+    } else if ((key === 'x' || key === 'y') && Number.isFinite(value)) concept[key] = Math.round(value)
     else if (key in concept) concept[key] = value
   }
   emit('concept', { id, history })
   if (save) scheduleSave()
+  return concept
+}
+
+export function addConceptImage(id, url, { history = true, selectAsMap = false } = {}) {
+  const concept = getConcept(id)
+  if (!concept || typeof url !== 'string' || !url) return null
+  if (history) remember()
+  const images = conceptImages(concept)
+  if (!images.includes(url)) images.push(url)
+  concept.images = images
+  if (!concept.mapImage || selectAsMap) concept.mapImage = url
+  if (!concept.showMapImage && images.length === 1) concept.showMapImage = true
+  ensureImageState(concept)
+  emit('concept', { id, history })
+  scheduleSave()
+  return concept
+}
+
+export function removeConceptImage(id, url, { history = true } = {}) {
+  const concept = getConcept(id)
+  if (!concept) return null
+  if (history) remember()
+  concept.images = conceptImages(concept).filter((item) => item !== url)
+  ensureImageState(concept)
+  emit('concept', { id, history })
+  scheduleSave()
+  return concept
+}
+
+export function setConceptMapImage(id, url, { history = true } = {}) {
+  const concept = getConcept(id)
+  if (!concept) return null
+  if (!conceptImages(concept).includes(url)) return concept
+  if (history) remember()
+  concept.mapImage = url
+  emit('concept', { id, history })
+  scheduleSave()
+  return concept
+}
+
+export function setConceptShowMapImage(id, show, { history = true } = {}) {
+  const concept = getConcept(id)
+  if (!concept) return null
+  const next = Boolean(show)
+  if (concept.showMapImage === next) return concept
+  if (history) remember()
+  concept.showMapImage = next
+  emit('concept', { id, history })
+  scheduleSave()
   return concept
 }
 

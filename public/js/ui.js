@@ -13,6 +13,8 @@ const THEME_KEY = 'concept:theme'
 let popover = null
 let inspectorWasOpen = false
 let tagsForId = null
+let imageIndexForId = null
+let imageIndex = 0
 
 const announce = (type, detail = {}) =>
   window.dispatchEvent(new CustomEvent(`concept:${type}`, { detail }))
@@ -78,13 +80,28 @@ export function initUI() {
     tagInput: $('#tag-input'),
     tagAdd: $('#tag-add'),
     tagSuggestions: $('#tag-suggestions'),
+    inspCarousel: $('#insp-carousel'),
     inspImage: $('#insp-image'),
     inspImageImg: $('#insp-image-img'),
+    imagePrev: $('#image-prev'),
+    imageNext: $('#image-next'),
+    imageCount: $('#image-count'),
+    imageMapBadge: $('#image-map-badge'),
+    imageMeta: $('#insp-image-meta'),
+    imageActions: $('#insp-image-actions'),
+    imageShowMap: $('#image-show-map'),
+    imageSetMap: $('#image-set-map'),
+    imageRemove: $('#image-remove'),
     addImage: $('#add-image'),
     addImageLabel: $('#add-image-label'),
-    replaceImage: $('#replace-image'),
-    removeImage: $('#remove-image'),
     swatches: $('#swatches'),
+
+    imageViewer: $('#image-viewer'),
+    viewerImg: $('#viewer-img'),
+    viewerCount: $('#viewer-count'),
+    viewerClose: $('#viewer-close'),
+    viewerPrev: $('#viewer-prev'),
+    viewerNext: $('#viewer-next'),
     linkList: $('#link-list'),
     linkCount: $('#link-count'),
     linkAdd: $('#link-add'),
@@ -208,7 +225,7 @@ function onStore(type, detail) {
     case 'concept':
       renderRail()
       renderTagFilter()
-      if (detail.history) renderInspector()
+      if (state.selection) renderInspector()
       break
     case 'tags':
       renderTagFilter()
@@ -308,11 +325,12 @@ function renderRail() {
     button.className = 'concept'
     button.dataset.id = concept.id
     if (state.selection === concept.id) button.classList.add('is-active')
-    if (concept.image) {
+    const thumbSrc = store.visibleMapImage(concept)
+    if (thumbSrc) {
       const thumb = document.createElement('span')
       thumb.className = 'concept__thumb'
       const img = document.createElement('img')
-      img.src = concept.image
+      img.src = thumbSrc
       img.alt = ''
       img.loading = 'lazy'
       thumb.append(img)
@@ -450,6 +468,8 @@ function renderInspector() {
   const concept = state.selection ? store.getConcept(state.selection) : null
   if (!concept) {
     tagsForId = null
+    imageIndexForId = null
+    imageIndex = 0
     els.tagInput.value = ''
     els.tagSuggestions.hidden = true
     if (inspectorWasOpen) {
@@ -461,36 +481,95 @@ function renderInspector() {
     return
   }
 
+  if (imageIndexForId !== concept.id) {
+    imageIndexForId = concept.id
+    const images = store.conceptImages(concept)
+    const preferred = concept.showMapImage && concept.mapImage ? concept.mapImage : images[0]
+    imageIndex = Math.max(0, images.indexOf(preferred))
+  }
+
   els.inspector.classList.add('is-open')
   els.inspector.setAttribute('aria-hidden', 'false')
   if (!inspectorWasOpen) {
     inspectorWasOpen = true
     announce('inspector', { open: true })
   }
-  els.inspKind.textContent = concept.image ? t('inspector.conceptImage') : t('inspector.concept')
+
+  const images = store.conceptImages(concept)
+  els.inspKind.textContent = images.length ? t('inspector.conceptImage') : t('inspector.concept')
   els.kindTick.style.background = concept.color
 
   if (document.activeElement !== els.inspTitle) els.inspTitle.value = concept.title
   autosizeTitle()
   if (document.activeElement !== els.inspDesc) els.inspDesc.value = concept.description
 
-  if (concept.image) {
-    els.inspImage.hidden = false
-    if (els.inspImageImg.getAttribute('src') !== concept.image) {
-      els.inspImageImg.src = concept.image
-    }
-    els.inspImageImg.alt = t('inspector.imageAlt', { title: titleOf(concept) })
-    els.addImageLabel.textContent = t('inspector.replaceImage')
-  } else {
-    els.inspImage.hidden = true
-    els.inspImageImg.removeAttribute('src')
-    els.addImageLabel.textContent = t('inspector.addImage')
-  }
-
+  renderInspectorImages(concept, images)
   renderSwatches(concept)
   renderTags(concept)
   renderConnections(concept)
   renderIsolate(concept)
+}
+
+function renderInspectorImages(concept, images) {
+  const hasImages = images.length > 0
+  if (!hasImages) imageIndex = 0
+  else imageIndex = clamp(imageIndex, 0, images.length - 1)
+  const current = hasImages ? images[imageIndex] : null
+
+  els.inspCarousel.hidden = !hasImages
+  els.imageMeta.hidden = !hasImages
+  els.imageActions.hidden = !hasImages
+  if (els.addImageLabel) els.addImageLabel.textContent = t('inspector.addImage')
+
+  if (!hasImages) {
+    els.inspImageImg.removeAttribute('src')
+    els.inspImageImg.alt = ''
+    els.inspImage.removeAttribute('title')
+    els.inspImage.removeAttribute('role')
+    els.inspImage.removeAttribute('aria-label')
+    els.inspImage.tabIndex = -1
+    els.imageCount.textContent = ''
+    els.imageMapBadge.hidden = true
+    if (els.imageViewer && els.imageViewer.open) els.imageViewer.close()
+    return
+  }
+
+  if (els.inspImageImg.getAttribute('src') !== current) {
+    els.inspImageImg.src = current
+  }
+  els.inspImageImg.alt = t('inspector.imageAlt', { title: titleOf(concept) })
+  els.inspImage.title = t('inspector.viewImage')
+  els.inspImage.setAttribute('role', 'button')
+  els.inspImage.tabIndex = 0
+  els.inspImage.setAttribute('aria-label', t('inspector.viewImage'))
+  els.imageCount.textContent = t('inspector.imageCount', { n: imageIndex + 1, total: images.length })
+  const isMapChoice = concept.mapImage === current
+  els.imageMapBadge.hidden = !(isMapChoice && concept.showMapImage)
+  els.imagePrev.disabled = images.length <= 1
+  els.imageNext.disabled = images.length <= 1
+  els.imageShowMap.checked = Boolean(concept.showMapImage)
+  els.imageSetMap.disabled = isMapChoice
+  els.imageSetMap.textContent = isMapChoice ? t('inspector.isMapImage') : t('inspector.setMapImage')
+
+  if (els.imageViewer && els.imageViewer.open) renderImageViewer(concept, images)
+}
+
+function renderImageViewer(concept, images) {
+  if (!els.imageViewer) return
+  if (!images.length) {
+    if (els.imageViewer.open) els.imageViewer.close()
+    return
+  }
+  imageIndex = clamp(imageIndex, 0, images.length - 1)
+  const current = images[imageIndex]
+  if (els.viewerImg.getAttribute('src') !== current) els.viewerImg.src = current
+  els.viewerImg.alt = t('inspector.imageAlt', { title: titleOf(concept) })
+  if (els.viewerCount) {
+    els.viewerCount.textContent = t('inspector.imageCount', { n: imageIndex + 1, total: images.length })
+  }
+  const multi = images.length > 1
+  if (els.viewerPrev) els.viewerPrev.disabled = !multi
+  if (els.viewerNext) els.viewerNext.disabled = !multi
 }
 
 function renderTags(concept) {
@@ -776,6 +855,71 @@ function bind() {
     }
   })
 
+  const stepImage = (delta) => {
+    const concept = state.selection ? store.getConcept(state.selection) : null
+    const images = concept ? store.conceptImages(concept) : []
+    if (images.length <= 1) return
+    imageIndex = (imageIndex + delta + images.length) % images.length
+    renderInspectorImages(concept, images)
+  }
+
+  els.imagePrev.addEventListener('click', () => stepImage(-1))
+  els.imageNext.addEventListener('click', () => stepImage(1))
+
+  const openImageViewer = () => {
+    const concept = state.selection ? store.getConcept(state.selection) : null
+    const images = concept ? store.conceptImages(concept) : []
+    if (!concept || !images.length || !els.imageViewer) return
+    renderImageViewer(concept, images)
+    if (!els.imageViewer.open) els.imageViewer.showModal()
+  }
+  els.inspImage.addEventListener('click', openImageViewer)
+  els.inspImage.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      openImageViewer()
+    }
+  })
+
+  if (els.viewerClose) {
+    els.viewerClose.addEventListener('click', () => els.imageViewer.close())
+  }
+  if (els.imageViewer) {
+    els.imageViewer.addEventListener('click', (event) => {
+      if (event.target === els.imageViewer) els.imageViewer.close()
+    })
+    els.imageViewer.addEventListener('keydown', (event) => {
+      if (!els.imageViewer.open) return
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        stepImage(-1)
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        stepImage(1)
+      }
+    })
+  }
+  if (els.viewerPrev) els.viewerPrev.addEventListener('click', () => stepImage(-1))
+  if (els.viewerNext) els.viewerNext.addEventListener('click', () => stepImage(1))
+  els.imageShowMap.addEventListener('change', () => {
+    if (!state.selection) return
+    store.setConceptShowMapImage(state.selection, els.imageShowMap.checked, { history: true })
+  })
+  els.imageSetMap.addEventListener('click', () => {
+    const concept = state.selection ? store.getConcept(state.selection) : null
+    const images = concept ? store.conceptImages(concept) : []
+    const current = images[imageIndex]
+    if (!concept || !current) return
+    store.setConceptMapImage(concept.id, current, { history: true })
+  })
+  els.imageRemove.addEventListener('click', () => {
+    const concept = state.selection ? store.getConcept(state.selection) : null
+    const images = concept ? store.conceptImages(concept) : []
+    const current = images[imageIndex]
+    if (!concept || !current) return
+    store.removeConceptImage(concept.id, current, { history: true })
+  })
+
   els.search.addEventListener('input', () => {
     store.setQuery(els.search.value)
   })
@@ -881,15 +1025,16 @@ function bind() {
     try {
       els.addImageLabel.textContent = t('inspector.savingImage')
       const url = await uploadImage(file)
-      store.updateConcept(state.selection, { image: url }, { history: true })
+      store.addConceptImage(state.selection, url, { history: true })
+      const concept = store.getConcept(state.selection)
+      const images = concept ? store.conceptImages(concept) : []
+      const idx = images.indexOf(url)
+      if (idx >= 0) imageIndex = idx
+      renderInspector()
     } catch (err) {
       showToast(err.message)
       renderInspector()
     }
-  })
-  els.removeImage.addEventListener('click', () => {
-    if (!state.selection) return
-    store.updateConcept(state.selection, { image: null }, { history: true })
   })
 
   els.linkAdd.addEventListener('click', () => openLinkPicker())

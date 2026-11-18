@@ -236,17 +236,35 @@
       <div class="inspector__scroll" id="inspector-scroll">
         <textarea class="insp-title" id="insp-title" rows="1" placeholder="Nombra el concepto" aria-label="Nombre del concepto" spellcheck="false" data-i18n-placeholder="inspector.namePlaceholder" data-i18n-aria="inspector.name"></textarea>
 
-        <div class="insp-image" id="insp-image" hidden>
-          <img id="insp-image-img" alt="">
-          <div class="insp-image__tools">
-            <button class="chip-btn" id="replace-image" data-i18n="inspector.change">Cambiar</button>
-            <button class="chip-btn" id="remove-image" data-i18n="inspector.remove">Quitar</button>
+        <div class="insp-images" id="insp-images">
+          <div class="insp-carousel" id="insp-carousel" hidden>
+            <button class="icon-btn insp-carousel__nav insp-carousel__nav--prev" id="image-prev" type="button" aria-label="Imagen anterior" title="Imagen anterior" data-i18n-aria="inspector.imagePrev" data-i18n-title="inspector.imagePrev">
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+            </button>
+            <div class="insp-image" id="insp-image">
+              <img id="insp-image-img" alt="">
+            </div>
+            <button class="icon-btn insp-carousel__nav insp-carousel__nav--next" id="image-next" type="button" aria-label="Imagen siguiente" title="Imagen siguiente" data-i18n-aria="inspector.imageNext" data-i18n-title="inspector.imageNext">
+              <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+            </button>
           </div>
+          <div class="insp-image-meta" id="insp-image-meta" hidden>
+            <span class="insp-image-meta__count" id="image-count"></span>
+            <span class="insp-image-meta__badge" id="image-map-badge" hidden data-i18n="inspector.onMap">En el mapa</span>
+          </div>
+          <div class="insp-image-actions" id="insp-image-actions" hidden>
+            <label class="insp-toggle" for="image-show-map">
+              <input type="checkbox" id="image-show-map">
+              <span data-i18n="inspector.showOnMap">Mostrar imagen en el mapa</span>
+            </label>
+            <button class="chip-btn chip-btn--plain" id="image-set-map" type="button" data-i18n="inspector.setMapImage">Usar esta en el mapa</button>
+            <button class="chip-btn chip-btn--plain chip-btn--danger" id="image-remove" type="button" data-i18n="inspector.removeImage">Quitar esta imagen</button>
+          </div>
+          <button class="text-btn text-btn--image" id="add-image" type="button">
+            <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
+            <span id="add-image-label" data-i18n="inspector.addImage">Añadir una imagen</span>
+          </button>
         </div>
-        <button class="text-btn text-btn--image" id="add-image">
-          <svg class="icon" aria-hidden="true"><use href="#i-image"/></svg>
-          <span id="add-image-label">Añadir una imagen</span>
-        </button>
 
         <section class="field">
           <div class="field__head">
@@ -356,6 +374,28 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog viewer" id="image-viewer" aria-label="Vista de imagen" data-i18n-aria="viewer.aria">
+    <div class="viewer__panel">
+      <div class="viewer__top">
+        <span class="viewer__count" id="viewer-count"></span>
+        <button class="icon-btn viewer__close" id="viewer-close" type="button" aria-label="Cerrar" title="Cerrar" data-i18n-aria="viewer.close" data-i18n-title="viewer.close">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+        </button>
+      </div>
+      <div class="viewer__body">
+        <button class="icon-btn viewer__nav viewer__nav--prev" id="viewer-prev" type="button" aria-label="Imagen anterior" title="Imagen anterior" data-i18n-aria="inspector.imagePrev" data-i18n-title="inspector.imagePrev">
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+        </button>
+        <figure class="viewer__figure">
+          <img id="viewer-img" alt="">
+        </figure>
+        <button class="icon-btn viewer__nav viewer__nav--next" id="viewer-next" type="button" aria-label="Imagen siguiente" title="Imagen siguiente" data-i18n-aria="inspector.imageNext" data-i18n-title="inspector.imageNext">
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+        </button>
       </div>
     </div>
   </dialog>
