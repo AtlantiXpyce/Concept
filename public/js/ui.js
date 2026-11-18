@@ -214,6 +214,7 @@ function onStore(type, detail) {
       renderTagFilter()
       renderRail()
       renderFocusbar()
+      renderInspector()
       break
     case 'links':
       renderRail()
@@ -393,6 +394,7 @@ function renderTagFilter() {
     button.dataset.tag = tag.key
     button.classList.toggle('is-active', selected)
     button.setAttribute('aria-pressed', String(selected))
+    button.style.setProperty('--tag-color', tag.color)
 
     const label = document.createElement('span')
     label.className = 'tag-chip__label'
@@ -502,16 +504,33 @@ function renderTags(concept) {
   for (const tag of tags) {
     const li = document.createElement('li')
     li.className = 'tag-pill'
+    const color = store.getTagColor(tag)
+    li.style.setProperty('--tag-color', color)
     const label = document.createElement('span')
     label.className = 'tag-pill__label'
     label.textContent = tag
+    label.title = t('tags.changeColor', { tag })
+    label.tabIndex = 0
+    label.role = 'button'
+    label.setAttribute('aria-haspopup', 'dialog')
+    const openPicker = () => openTagColorPopover(tag, label)
+    label.addEventListener('click', openPicker)
+    label.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        openPicker()
+      }
+    })
     const remove = document.createElement('button')
     remove.type = 'button'
     remove.className = 'tag-pill__remove'
     remove.title = t('tags.remove', { tag })
     remove.setAttribute('aria-label', remove.title)
     remove.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>'
-    remove.addEventListener('click', () => store.removeTag(concept.id, tag))
+    remove.addEventListener('click', (e) => {
+      e.stopPropagation()
+      store.removeTag(concept.id, tag)
+    })
     li.append(label, remove)
     els.tagList.append(li)
   }
@@ -542,6 +561,7 @@ function renderTagSuggestions(concept) {
     button.type = 'button'
     button.className = 'tag-suggestion'
     button.textContent = tag.label
+    button.style.setProperty('--tag-color', tag.color)
     button.title = t('inspector.addTag')
     button.addEventListener('pointerdown', (event) => event.preventDefault())
     button.addEventListener('click', () => {
@@ -1217,6 +1237,55 @@ function openEdgePopover({ linkId, x, y }) {
 
 /* --------------------------------------------------------------- tableros */
 
+function openTagColorPopover(tag, anchorEl) {
+  if (popover && popover.el.classList.contains('pop--tagcolor') && popover.tagKey === fold(tag)) {
+    closePopover()
+    return
+  }
+  const rect = anchorEl.getBoundingClientRect()
+  const el = document.createElement('div')
+  el.className = 'pop pop--tagcolor'
+  el.setAttribute('role', 'dialog')
+  el.setAttribute('aria-label', t('tags.changeColor', { tag }))
+
+  const title = document.createElement('div')
+  title.className = 'pop__title'
+  title.textContent = t('tags.color')
+
+  const swatches = document.createElement('div')
+  swatches.className = 'swatches'
+  swatches.setAttribute('role', 'group')
+  swatches.setAttribute('aria-label', t('inspector.color'))
+  const current = store.getTagColor(tag)
+  for (const color of PALETTE) {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'swatch'
+    button.style.setProperty('--swatch', color.value)
+    button.dataset.color = color.value
+    const selected = current === color.value
+    button.classList.toggle('is-selected', selected)
+    button.setAttribute('aria-pressed', String(selected))
+    button.title = t(`palette.${color.key}`)
+    button.setAttribute('aria-label', button.title)
+    const check = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    check.setAttribute('class', 'icon')
+    check.setAttribute('aria-hidden', 'true')
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use')
+    use.setAttribute('href', '#i-check')
+    check.append(use)
+    button.append(check)
+    button.addEventListener('click', () => {
+      store.setTagColor(tag, color.value)
+      closePopover()
+    })
+    swatches.append(button)
+  }
+
+  el.append(title, swatches)
+  mountPopover(el, { x: rect.left, y: rect.bottom + 6 })
+  if (popover) popover.tagKey = fold(tag)
+}
 function openBoardsPanel() {
   if (popover && popover.el.classList.contains('pop--boards')) {
     closePopover()

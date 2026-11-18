@@ -11,6 +11,12 @@ export const PALETTE = [
   { key: 'terracotta', value: '#A05A4C' },
   { key: 'verdigris', value: '#4A7C86' },
   { key: 'mauve', value: '#7C6490' },
+  { key: 'ocean', value: '#2E6F95' },
+  { key: 'olive', value: '#6E7F3A' },
+  { key: 'rose', value: '#B45C7A' },
+  { key: 'copper', value: '#B5653B' },
+  { key: 'slate', value: '#5F6F82' },
+  { key: 'ruby', value: '#A3465A' },
 ]
 
 const MAX_HISTORY = 60
@@ -78,6 +84,30 @@ function cleanTags(raw) {
   return out
 }
 
+function hashTag(key) {
+  let h = 0
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
+export function defaultTagColor(tag) {
+  const key = fold(tag)
+  if (!key) return PALETTE[0].value
+  return PALETTE[hashTag(key) % PALETTE.length].value
+}
+
+function cleanTagColors(raw) {
+  if (!raw || typeof raw !== 'object') return {}
+  const allowed = new Set(PALETTE.map((p) => p.value))
+  const out = {}
+  for (const [key, value] of Object.entries(raw)) {
+    const k = fold(key)
+    if (!k || typeof value !== 'string' || !allowed.has(value)) continue
+    out[k] = value
+  }
+  return out
+}
+
 export function normalize(raw) {
   const doc = raw && typeof raw === 'object' ? raw : {}
   const concepts = Array.isArray(doc.concepts) ? doc.concepts : []
@@ -122,6 +152,7 @@ export function normalize(raw) {
       return true
     })
 
+  const tagColors = cleanTagColors(doc.tagColors)
   return {
     version: 1,
     title: typeof doc.title === 'string' ? doc.title.trim().slice(0, 140) : '',
@@ -129,6 +160,7 @@ export function normalize(raw) {
     updatedAt: doc.updatedAt || new Date().toISOString(),
     concepts: cleanConcepts,
     links: cleanLinks,
+    tagColors,
   }
 }
 
@@ -200,6 +232,13 @@ export function tagsOf(concept) {
   return concept && Array.isArray(concept.tags) ? concept.tags : []
 }
 
+export function getTagColor(tag) {
+  const key = fold(tag)
+  if (!key) return PALETTE[0].value
+  const colors = state.doc.tagColors || {}
+  return colors[key] || defaultTagColor(key)
+}
+
 export function allTags() {
   const found = new Map()
   for (const concept of state.doc.concepts) {
@@ -208,12 +247,25 @@ export function allTags() {
       if (!key) continue
       const entry = found.get(key)
       if (entry) entry.count += 1
-      else found.set(key, { key, label: tag, count: 1 })
+      else found.set(key, { key, label: tag, count: 1, color: getTagColor(key) })
     }
   }
   return [...found.values()].sort(
     (a, b) => b.count - a.count || a.label.localeCompare(b.label, 'es'),
   )
+}
+
+export function setTagColor(tag, color) {
+  const key = fold(tag)
+  if (!key) return false
+  if (!PALETTE.some((p) => p.value === color)) return false
+  if (!state.doc.tagColors) state.doc.tagColors = {}
+  if (state.doc.tagColors[key] === color) return true
+  remember()
+  state.doc.tagColors[key] = color
+  emit('tags', { fit: false })
+  scheduleSave()
+  return true
 }
 
 export function matchesTagFilter(concept) {
@@ -310,6 +362,7 @@ function snapshot() {
     title: state.doc.title,
     concepts: state.doc.concepts,
     links: state.doc.links,
+    tagColors: state.doc.tagColors || {},
   })
 }
 
@@ -319,6 +372,7 @@ function applySnapshot(json) {
     state.doc.title = data.title
     state.doc.concepts = data.concepts
     state.doc.links = data.links
+    state.doc.tagColors = cleanTagColors(data.tagColors)
   } catch {
     return
   }

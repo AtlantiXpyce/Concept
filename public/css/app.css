@@ -226,7 +226,7 @@ svg { display: block; }
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--line)) 45%, var(--line));
   background: var(--paper);
   color: var(--ink-2);
   font-size: 11px;
@@ -235,10 +235,10 @@ svg { display: block; }
   border-radius: 99px;
   transition: background 0.13s, border-color 0.13s, color 0.13s;
 }
-.tag-chip:hover { background: var(--paper-2); border-color: var(--line-strong); color: var(--ink); }
-.tag-chip.is-active { background: var(--pine); border-color: var(--pine); color: #f5f7f1; }
-:root[data-theme="dark"] .tag-chip.is-active { color: #0f1b17; }
-.tag-chip.is-active:hover { background: var(--pine-deep); border-color: var(--pine-deep); }
+.tag-chip:hover { background: color-mix(in srgb, var(--tag-color, var(--pine)) 10%, var(--paper-2)); border-color: color-mix(in srgb, var(--tag-color, var(--line-strong)) 55%, var(--line-strong)); color: var(--ink); }
+.tag-chip.is-active { background: var(--tag-color, var(--pine)); border-color: var(--tag-color, var(--pine)); color: #f5f7f1; }
+:root[data-theme="dark"] .tag-chip.is-active { color: #f5f7f1; }
+.tag-chip.is-active:hover { filter: brightness(0.92); }
 .tag-chip__count {
   font-size: 9.5px;
   font-variant-numeric: tabular-nums;
@@ -312,7 +312,7 @@ svg { display: block; }
 .concept__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .concept__thumb .icon { width: 14px; height: 14px; }
 .concept__thumb--empty { background: transparent; border-color: transparent; padding-left: 3px; }
-.concept__tick { width: 3px; height: 17px; border-radius: 2px; background: var(--tick, var(--pine)); }
+.concept__tick { width: 5px; height: 17px; border-radius: 3px; background: var(--tick, var(--pine)); }
 
 .concept__text { min-width: 0; }
 .concept__title {
@@ -729,16 +729,19 @@ svg { display: block; }
 .node.node--graph {
   width: 96px;
   height: 96px;
-  padding: 10px;
+  padding: 8px;
   border: 2px solid rgba(255, 255, 255, 0.32);
   border-radius: 50%;
   box-shadow: 0 2px 8px -4px rgba(24, 38, 32, 0.35), 0 8px 18px -12px rgba(24, 38, 32, 0.4);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3px;
   text-align: center;
   color: #fff;
   background: var(--node-color, var(--pine));
+  overflow: hidden;
 }
 .node.node--graph:hover {
   border-color: rgba(255, 255, 255, 0.55);
@@ -756,28 +759,56 @@ svg { display: block; }
   box-shadow: 0 0 0 4px rgba(176, 121, 43, 0.35), 0 0 0 7px rgba(255, 255, 255, 0.25), 0 12px 26px -16px rgba(24, 38, 32, 0.45);
 }
 .node.node--graph .node__title {
-  font-size: 13px;
-  line-height: 1.25;
+  font-size: var(--graph-title-size, 13px);
+  line-height: 1.12;
   font-weight: 600;
   color: #fff;
   text-shadow: 0 1px 2px rgba(20, 30, 26, 0.18);
-  -webkit-line-clamp: 4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
   overflow-wrap: anywhere;
 }
 .node.node--graph[data-empty="title"] .node__title { color: rgba(255, 255, 255, 0.82); font-style: italic; }
+.node.node--graph .node__tags {
+  margin-top: 0;
+  justify-content: center;
+  gap: 2px;
+  max-width: 100%;
+  flex: 0 0 auto;
+}
+.node.node--graph .node__tag {
+  font-size: var(--graph-tag-size, 8px);
+  line-height: 1.35;
+  padding: 0 4px;
+  max-width: calc(100% - 2px);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: color-mix(in srgb, var(--tag-color, var(--pine)) 78%, rgba(255, 255, 255, 0.18));
+  color: #fff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+}
+.node.node--graph .node__tag--more {
+  font-size: var(--graph-tag-size, 8px);
+  line-height: 1.35;
+  border-color: transparent;
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0 4px;
+}
 
 .node__spine {
   position: absolute;
   left: -1px;
-  top: 9px;
-  bottom: 9px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
+  top: 8px;
+  bottom: 8px;
+  width: 6px;
+  border-radius: 0 4px 4px 0;
   background: var(--node-color, var(--pine));
   transition: width 0.16s;
 }
-.node:hover .node__spine { width: 4px; }
-.node.is-center .node__spine { width: 4px; }
+.node:hover .node__spine { width: 7px; }
+.node.is-center .node__spine { width: 7px; }
 
 .node__media {
   border-radius: 9px 9px 0 0;
@@ -826,9 +857,9 @@ svg { display: block; }
   font-size: 9.5px;
   line-height: 1.6;
   padding: 0 6px;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--pine)) 38%, var(--line));
   border-radius: 99px;
-  background: var(--paper-2);
+  background: color-mix(in srgb, var(--tag-color, var(--pine)) 14%, var(--paper));
   color: var(--ink-2);
 }
 .node__tag--more { padding: 0 3px; border-color: transparent; background: transparent; color: var(--muted); }
@@ -974,7 +1005,7 @@ svg { display: block; }
   border-bottom: 1px solid var(--line);
 }
 .inspector__kind { display: flex; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
-.kind__tick { width: 3px; height: 14px; border-radius: 2px; background: var(--pine); }
+.kind__tick { width: 5px; height: 16px; border-radius: 3px; background: var(--pine); }
 .inspector__tools { display: flex; align-items: center; gap: 1px; }
 
 .icon-btn {
@@ -1009,10 +1040,11 @@ svg { display: block; }
   background: transparent;
   padding: 0 0 7px;
   margin: 0 0 12px;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
+  font-weight: 600;
   font-size: 30px;
-  line-height: 1.14;
-  letter-spacing: -0.008em;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   resize: none;
   overflow: hidden;
   outline: none;
@@ -1108,10 +1140,10 @@ svg { display: block; }
   align-items: center;
   gap: 3px;
   max-width: 100%;
-  border: 1px solid #c9ded2;
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--pine)) 42%, var(--line));
   border-radius: 99px;
-  background: var(--pine-wash);
-  color: var(--pine-deep);
+  background: color-mix(in srgb, var(--tag-color, var(--pine)) 14%, var(--paper));
+  color: var(--ink-2);
   padding: 3px 4px 3px 9px;
   font-size: 11.5px;
   font-weight: 500;
@@ -1122,7 +1154,9 @@ svg { display: block; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
+.tag-pill__label:hover { color: var(--ink); }
 .tag-pill__remove {
   flex: none;
   width: 16px;
@@ -1135,7 +1169,7 @@ svg { display: block; }
   color: inherit;
   opacity: 0.7;
 }
-.tag-pill__remove:hover { opacity: 1; background: rgba(31, 92, 74, 0.14); }
+.tag-pill__remove:hover { opacity: 1; background: color-mix(in srgb, var(--tag-color, var(--pine)) 20%, transparent); }
 .tag-pill__remove .icon { width: 10px; height: 10px; }
 .tag-editor__row {
   display: flex;
@@ -1173,15 +1207,15 @@ svg { display: block; }
 .tag-editor__add .icon { width: 14px; height: 14px; }
 .tag-editor__suggestions { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag-suggestion {
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed color-mix(in srgb, var(--tag-color, var(--pine)) 45%, var(--line-strong));
   border-radius: 99px;
   background: transparent;
-  color: var(--muted);
+  color: var(--ink-2);
   font-size: 10.5px;
   line-height: 1.4;
   padding: 2px 7px;
 }
-.tag-suggestion:hover { border-color: var(--pine); background: var(--pine-wash); color: var(--pine-deep); }
+.tag-suggestion:hover { border-color: var(--tag-color, var(--pine)); background: color-mix(in srgb, var(--tag-color, var(--pine)) 14%, var(--paper)); color: var(--ink); }
 
 .swatches { display: flex; gap: 9px; flex-wrap: wrap; }
 .swatch {
@@ -1515,6 +1549,9 @@ kbd {
 .boards__toggle .icon { width: 15px; height: 15px; }
 
 .pop--boards { width: 272px; }
+.pop--tagcolor { width: auto; max-width: 260px; padding: 10px 11px; }
+.pop--tagcolor .pop__title { margin: 0 2px 8px; }
+.pop--tagcolor .swatches { gap: 7px; }
 .boards__list {
   display: flex;
   flex-direction: column;
@@ -1751,11 +1788,7 @@ kbd {
   border-color: var(--line);
   color: var(--ink-2);
 }
-:root[data-theme="dark"] .tag-pill {
-  border-color: #3a5b4e;
-  background: var(--pine-wash);
-  color: #9fd7c3;
-}
+
 :root[data-theme="dark"] .tag-suggestion { border-color: var(--line-strong); }
 
 :root[data-theme="dark"] .empty__art { color: #3a4a44; }
