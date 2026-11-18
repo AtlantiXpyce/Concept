@@ -130,6 +130,10 @@
             <button class="lang__btn" type="button" data-lang="es" aria-pressed="true">ES</button>
             <button class="lang__btn" type="button" data-lang="en" aria-pressed="false">EN</button>
           </div>
+          <div class="viewmode" id="viewmode" role="group" aria-label="Modo de visualización" data-i18n-aria="view.aria">
+            <button class="viewmode__btn is-active" type="button" data-view="map" aria-pressed="true" title="Ver el mapa con fichas completas" data-i18n="view.map" data-i18n-title="view.mapTitle">Mapa</button>
+            <button class="viewmode__btn" type="button" data-view="graph" aria-pressed="false" title="Ver solo nombres en círculos según sus relaciones" data-i18n="view.graph" data-i18n-title="view.graphTitle">Grafo de importancia</button>
+          </div>
           <div class="zoom" role="group" aria-label="Zoom" data-i18n-aria="zoom.aria">
             <button class="zoom__btn" id="zoom-out" aria-label="Alejar" data-i18n-aria="zoom.out">−</button>
             <button class="zoom__level" id="zoom-level" title="Volver al 100%" data-i18n-title="zoom.reset">100%</button>

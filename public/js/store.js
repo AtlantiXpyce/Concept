@@ -24,6 +24,7 @@ export const state = {
   focus: [],
   query: '',
   tagFilter: [],
+  viewMode: 'map',
   ready: false,
   save: 'saved',
 }
@@ -425,6 +426,13 @@ export function setTitle(title) {
 export function setQuery(query) {
   state.query = query
   emit('query')
+}
+
+export function setViewMode(mode) {
+  if (mode !== 'map' && mode !== 'graph') return
+  if (state.viewMode === mode) return
+  state.viewMode = mode
+  emit('view')
 }
 
 /* --------------------------------------------------------------- selección y foco */

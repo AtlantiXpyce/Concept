@@ -60,6 +60,12 @@ const messages = {
     'zoom.reset': 'Volver al 100%',
     'zoom.fit': 'Ajustar',
 
+    'view.aria': 'Modo de visualización',
+    'view.map': 'Mapa',
+    'view.graph': 'Grafo de importancia',
+    'view.mapTitle': 'Ver el mapa con fichas completas',
+    'view.graphTitle': 'Ver solo nombres en círculos según sus relaciones',
+
     'menu.more': 'Más opciones',
     'menu.export': 'Exportar mapa (.json)',
     'menu.import': 'Importar un mapa',
@@ -292,6 +298,12 @@ const messages = {
     'zoom.in': 'Zoom in',
     'zoom.reset': 'Reset to 100%',
     'zoom.fit': 'Fit',
+
+    'view.aria': 'View mode',
+    'view.map': 'Map',
+    'view.graph': 'Importance graph',
+    'view.mapTitle': 'Show the map with full cards',
+    'view.graphTitle': 'Show only names in circles sized by their connections',
 
     'menu.more': 'More options',
     'menu.export': 'Export map (.json)',

@@ -1,4 +1,4 @@
-/* Concept — interfaz: índice, inspector, barra superior y avisos. */
+﻿/* Concept â€” interfaz: Ã­ndice, inspector, barra superior y avisos. */
 
 import * as store from './store.js'
 import { PALETTE, state } from './store.js'
@@ -63,6 +63,7 @@ export function initUI() {
     zoomLevel: $('#zoom-level'),
     fitView: $('#fit-view'),
     menuButton: $('#menu-button'),
+    viewButtons: [...document.querySelectorAll('[data-view]')],
     menu: $('#menu'),
 
     inspector: $('#inspector'),
@@ -108,6 +109,7 @@ export function initUI() {
   syncLangButtons()
   store.subscribe(onStore)
   renderAll()
+  syncViewButtons()
   loadServerInfo()
   announceReady()
 }
@@ -116,6 +118,15 @@ function syncLangButtons() {
   const lang = getLang()
   for (const button of els.langButtons) {
     button.setAttribute('aria-pressed', String(button.dataset.lang === lang))
+  }
+}
+
+function syncViewButtons() {
+  const mode = state.viewMode
+  for (const button of els.viewButtons) {
+    const active = button.dataset.view === mode
+    button.classList.toggle('is-active', active)
+    button.setAttribute('aria-pressed', String(active))
   }
 }
 
@@ -146,7 +157,7 @@ async function loadServerInfo() {
 function onStore(type, detail) {
   switch (type) {
     case 'load':
-      // Al abrir otro tablero el campo debe mostrar su título aunque tuviera
+      // Al abrir otro tablero el campo debe mostrar su tÃ­tulo aunque tuviera
       // el foco: el documento anterior ya no existe.
       els.docTitle.value = state.doc.title
       els.docTitle.style.width = ''
@@ -192,6 +203,9 @@ function onStore(type, detail) {
       renderRail()
       renderInspector()
       break
+    case 'view':
+      syncViewButtons()
+      break
     case 'focus':
       renderRail()
       renderFocusbar()
@@ -210,6 +224,7 @@ function onStore(type, detail) {
 function renderAll() {
   if (document.activeElement !== els.docTitle) els.docTitle.value = state.doc.title
   syncDocTitle()
+  syncViewButtons()
   if (document.activeElement !== els.search && state.query !== els.search.value) els.search.value = state.query
   renderRail()
   renderTagFilter()
@@ -219,7 +234,7 @@ function renderAll() {
   renderEmptyState()
 }
 
-/* --------------------------------------------------------------- índice */
+/* --------------------------------------------------------------- Ã­ndice */
 
 function visibleConcepts() {
   const focus = store.focusSet()
@@ -290,14 +305,14 @@ function renderRail() {
     const sub = document.createElement('span')
     sub.className = 'concept__sub'
     const snippet = concept.description.replace(/\s+/g, ' ').trim()
-    sub.textContent = snippet.length > 58 ? `${snippet.slice(0, 58)}…` : snippet
+    sub.textContent = snippet.length > 58 ? `${snippet.slice(0, 58)}â€¦` : snippet
     text.append(title, sub)
 
     const tags = store.tagsOf(concept)
     if (tags.length) {
       const tagRow = document.createElement('span')
       tagRow.className = 'concept__tags'
-      tagRow.title = tags.join(' · ')
+      tagRow.title = tags.join(' Â· ')
       for (const tag of tags.slice(0, 2)) {
         const chip = document.createElement('span')
         chip.className = 'concept__tag'
@@ -667,6 +682,9 @@ function renderSave() {
 function bind() {
   for (const button of els.langButtons) {
     button.addEventListener('click', () => setLang(button.dataset.lang))
+  }
+  for (const button of els.viewButtons) {
+    button.addEventListener('click', () => store.setViewMode(button.dataset.view))
   }
   window.addEventListener('concept:language', () => {
     applyStaticTranslations()
@@ -1193,7 +1211,7 @@ function openBoardsPanel() {
 }
 
 async function refreshBoardsList(listEl) {
-  // Guarda el título pendiente para que la lista muestre el nombre actual.
+  // Guarda el tÃ­tulo pendiente para que la lista muestre el nombre actual.
   if (store.state.save !== 'saved') await store.saveNow()
   await fillBoardsList(listEl)
 }
@@ -1331,7 +1349,7 @@ async function loadFirstAvailable(list) {
   return false
 }
 
-/* --------------------------------------------------------------- rail móvil / menú */
+/* --------------------------------------------------------------- rail mÃ³vil / menÃº */
 
 function openRail() {
   els.rail.classList.add('is-open')

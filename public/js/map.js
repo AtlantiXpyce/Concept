@@ -9,6 +9,18 @@ import { t } from './i18n.js'
 const NS = 'http://www.w3.org/2000/svg'
 const NODE_W = 236
 const DEFAULT_H = 148
+const GRAPH_MIN = 68
+const GRAPH_MAX = 220
+const GRAPH_STEP = 18
+
+function isGraphMode() {
+  return state.viewMode === 'graph'
+}
+
+function graphDiameter(id) {
+  const degree = store.linksOf(id).length
+  return clamp(GRAPH_MIN + degree * GRAPH_STEP, GRAPH_MIN, GRAPH_MAX)
+}
 
 const els = {}
 const sizes = new Map()
@@ -91,12 +103,25 @@ function onStore(type, detail) {
       }
       break
     case 'links':
-      renderEdges()
+      if (isGraphMode()) {
+        renderNodes()
+        renderEdges()
+      } else {
+        renderEdges()
+      }
       // Al añadir o quitar relaciones cambia el anillo del foco.
       if (state.focus.length) applyFocus()
       break
     case 'link':
       renderEdges()
+      break
+    case 'view':
+      cancelLayout()
+      renderNodes()
+      renderEdges()
+      applyClasses()
+      if (state.focus.length) applyFocus()
+      scheduleEdges()
       break
     case 'selection':
       applyClasses()
@@ -134,35 +159,45 @@ function buildNode(concept, index) {
   el.setAttribute('role', 'group')
   el.setAttribute('aria-label', nodeLabel(concept))
 
-  const spine = document.createElement('span')
-  spine.className = 'node__spine'
-  el.append(spine)
+  if (isGraphMode()) {
+    el.classList.add('node--graph')
+    const d = graphDiameter(concept.id)
+    el.style.width = `${d}px`
+    el.style.height = `${d}px`
+    const title = document.createElement('h3')
+    title.className = 'node__title'
+    el.append(title)
+  } else {
+    const spine = document.createElement('span')
+    spine.className = 'node__spine'
+    el.append(spine)
 
-  if (concept.image) el.append(buildMedia(concept))
+    if (concept.image) el.append(buildMedia(concept))
 
-  const body = document.createElement('div')
-  body.className = 'node__body'
-  const title = document.createElement('h3')
-  title.className = 'node__title'
-  const desc = document.createElement('p')
-  desc.className = 'node__desc'
-  const tags = document.createElement('div')
-  tags.className = 'node__tags'
-  const meta = document.createElement('div')
-  meta.className = 'node__meta'
-  body.append(title, desc, tags, meta)
-  el.append(body)
+    const body = document.createElement('div')
+    body.className = 'node__body'
+    const title = document.createElement('h3')
+    title.className = 'node__title'
+    const desc = document.createElement('p')
+    desc.className = 'node__desc'
+    const tags = document.createElement('div')
+    tags.className = 'node__tags'
+    const meta = document.createElement('div')
+    meta.className = 'node__meta'
+    body.append(title, desc, tags, meta)
+    el.append(body)
 
-  const handle = document.createElement('button')
-  handle.type = 'button'
-  handle.className = 'node__handle'
-  handle.addEventListener('pointerdown', (event) => {
-    event.stopPropagation()
-    event.preventDefault()
-    startLinking(concept.id, event)
-  })
-  handle.addEventListener('click', (event) => event.stopPropagation())
-  el.append(handle)
+    const handle = document.createElement('button')
+    handle.type = 'button'
+    handle.className = 'node__handle'
+    handle.addEventListener('pointerdown', (event) => {
+      event.stopPropagation()
+      event.preventDefault()
+      startLinking(concept.id, event)
+    })
+    handle.addEventListener('click', (event) => event.stopPropagation())
+    el.append(handle)
+  }
 
   paintNode(el, concept)
 
@@ -212,24 +247,37 @@ function nodeLabel(concept) {
 }
 
 function paintNode(el, concept) {
+  const graph = isGraphMode() || el.classList.contains('node--graph')
   el.classList.toggle('is-empty', !concept.title.trim())
   el.dataset.empty = concept.title.trim() ? '' : 'title'
   el.setAttribute('aria-label', nodeLabel(concept))
   const title = el.querySelector('.node__title')
+  if (title) title.textContent = concept.title.trim() || t('concept.untitledShort')
+  el.style.setProperty('--node-color', concept.color)
+
+  if (graph) {
+    const d = graphDiameter(concept.id)
+    el.style.width = `${d}px`
+    el.style.height = `${d}px`
+    el.style.background = concept.color
+    return
+  }
+
   const desc = el.querySelector('.node__desc')
   const tags = el.querySelector('.node__tags')
   const meta = el.querySelector('.node__meta')
   const handle = el.querySelector('.node__handle')
-  title.textContent = concept.title.trim() || t('concept.untitledShort')
-  desc.textContent = concept.description
-  paintTags(tags, concept)
+  if (desc) desc.textContent = concept.description
+  if (tags) paintTags(tags, concept)
   const n = store.linksOf(concept.id).length
-  meta.textContent = n ? relationCount(n) : ''
+  if (meta) meta.textContent = n ? relationCount(n) : ''
   if (handle) {
     handle.title = t('node.dragTitle')
     handle.setAttribute('aria-label', t('node.dragAria', { title: concept.title.trim() || t('concept.untitled') }))
   }
-  el.querySelector('.node__spine').style.background = concept.color
+  const spine = el.querySelector('.node__spine')
+  if (spine) spine.style.background = concept.color
+  el.style.background = ''
 }
 
 function paintTags(container, concept) {
@@ -269,7 +317,12 @@ function renderNodes() {
   els.nodes.append(fragment)
 
   for (const [id, el] of nodeEls) {
-    sizes.set(id, { w: el.offsetWidth || NODE_W, h: el.offsetHeight || DEFAULT_H })
+    if (isGraphMode()) {
+      const d = graphDiameter(id)
+      sizes.set(id, { w: d, h: d })
+    } else {
+      sizes.set(id, { w: el.offsetWidth || NODE_W, h: el.offsetHeight || DEFAULT_H })
+    }
     measured.add(id)
   }
   for (const id of layoutPositions.keys()) {
@@ -296,7 +349,12 @@ function updateNode(id) {
 function measure(id) {
   const el = nodeEls.get(id)
   if (!el) return
-  sizes.set(id, { w: el.offsetWidth || NODE_W, h: el.offsetHeight || DEFAULT_H })
+  if (isGraphMode()) {
+    const d = graphDiameter(id)
+    sizes.set(id, { w: d, h: d })
+  } else {
+    sizes.set(id, { w: el.offsetWidth || NODE_W, h: el.offsetHeight || DEFAULT_H })
+  }
 }
 
 function scheduleEdges() {
@@ -522,7 +580,12 @@ function computeFocusLayout() {
       .sort((a, b) => a.angle - b.angle)
 
     const n = ordered.length
-    const radius = clamp((NODE_W + 34) / (2 * Math.sin(Math.PI / n)) + 8, 290, 560)
+    const base = Math.max(
+      NODE_W,
+      sizeOf(centerId).w,
+      ...ordered.map((entry) => sizeOf(entry.id).w),
+    )
+    const radius = clamp((base + 34) / (2 * Math.sin(Math.PI / n)) + 8, 290, 620)
     const rx = radius * 1.1
     const ry = radius * 0.84
 
