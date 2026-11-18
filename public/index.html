@@ -9,6 +9,15 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/site.webmanifest">
   <link rel="stylesheet" href="/css/app.css">
+  <script>
+    (() => {
+      try {
+        const stored = localStorage.getItem('concept:theme');
+        const dark = stored ? stored === 'dark' : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (dark) document.documentElement.dataset.theme = 'dark';
+      } catch {}
+    })();
+  </script>
 </head>
 <body>
   <svg class="sprite" aria-hidden="true" focusable="false">
@@ -33,6 +42,8 @@
     <symbol id="i-machine" viewBox="0 0 20 20"><rect x="3" y="4.5" width="14" height="9" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7 16.6h6M10 13.5v3.1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
     <symbol id="i-download" viewBox="0 0 20 20"><path d="M10 3.5v8.4m0 0 3.2-3.2M10 11.9 6.8 8.7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 13.4v1.9c0 .7.5 1.2 1.2 1.2h9.6c.7 0 1.2-.5 1.2-1.2v-1.9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
     <symbol id="i-upload" viewBox="0 0 20 20"><path d="M10 12.5V4.1m0 0L6.8 7.3M10 4.1l3.2 3.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 13.4v1.9c0 .7.5 1.2 1.2 1.2h9.6c.7 0 1.2-.5 1.2-1.2v-1.9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 2.6v2.1M10 15.3v2.1M2.6 10h2.1M15.3 10h2.1M4.8 4.8l1.5 1.5M13.7 13.7l1.5 1.5M15.2 4.8l-1.5 1.5M6.3 13.7l-1.5 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 20 20"><path d="M14.8 12.8A6.1 6.1 0 0 1 7.2 5.2a6.4 6.4 0 1 0 7.6 7.6Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   </svg>
 
   <div class="app" id="app">
@@ -101,8 +112,9 @@
           <svg class="icon" aria-hidden="true"><use href="#i-menu"/></svg>
         </button>
 
-        <button class="icon-btn boards__toggle" id="boards-button" aria-label="Tableros" aria-haspopup="dialog" title="Tableros" data-i18n-aria="boards.aria" data-i18n-title="boards.aria">
+        <button class="btn btn--quiet btn--sm boards__toggle" id="boards-button" aria-label="Tableros" aria-haspopup="dialog" title="Tableros" data-i18n-aria="boards.aria" data-i18n-title="boards.aria">
           <svg class="icon" aria-hidden="true"><use href="#i-boards"/></svg>
+          <span data-i18n="boards.aria">Tableros</span>
         </button>
 
         <div class="doc" id="doc">
@@ -126,6 +138,14 @@
         </div>
 
         <div class="viewtools">
+          <div class="theme" id="theme-toggle" role="group" aria-label="Tema" data-i18n-aria="theme.aria">
+            <button class="theme__btn" type="button" data-theme="light" aria-pressed="true" aria-label="Tema claro" title="Tema claro" data-i18n-aria="theme.light" data-i18n-title="theme.light">
+              <svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg>
+            </button>
+            <button class="theme__btn" type="button" data-theme="dark" aria-pressed="false" aria-label="Tema oscuro" title="Tema oscuro" data-i18n-aria="theme.dark" data-i18n-title="theme.dark">
+              <svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg>
+            </button>
+          </div>
           <div class="lang" role="group" aria-label="Idioma" data-i18n-aria="lang.aria">
             <button class="lang__btn" type="button" data-lang="es" aria-pressed="true">ES</button>
             <button class="lang__btn" type="button" data-lang="en" aria-pressed="false">EN</button>

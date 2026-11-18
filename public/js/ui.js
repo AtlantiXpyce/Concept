@@ -1,4 +1,4 @@
-﻿/* Concept â€” interfaz: Ã­ndice, inspector, barra superior y avisos. */
+/* Concept â€” interfaz: Ã­ndice, inspector, barra superior y avisos. */
 
 import * as store from './store.js'
 import { PALETTE, state } from './store.js'
@@ -8,6 +8,7 @@ import * as boards from './boards.js'
 
 const $ = (sel) => document.querySelector(sel)
 const els = {}
+const THEME_KEY = 'concept:theme'
 
 let popover = null
 let inspectorWasOpen = false
@@ -64,6 +65,7 @@ export function initUI() {
     fitView: $('#fit-view'),
     menuButton: $('#menu-button'),
     viewButtons: [...document.querySelectorAll('[data-view]')],
+    themeButtons: [...document.querySelectorAll('.theme__btn[data-theme]')],
     menu: $('#menu'),
 
     inspector: $('#inspector'),
@@ -107,6 +109,7 @@ export function initUI() {
 
   bind()
   syncLangButtons()
+  syncThemeButtons()
   store.subscribe(onStore)
   renderAll()
   syncViewButtons()
@@ -118,6 +121,31 @@ function syncLangButtons() {
   const lang = getLang()
   for (const button of els.langButtons) {
     button.setAttribute('aria-pressed', String(button.dataset.lang === lang))
+  }
+}
+
+function getTheme() {
+  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
+}
+
+function applyTheme(theme, { persist = false } = {}) {
+  const next = theme === 'dark' ? 'dark' : 'light'
+  if (next === 'dark') document.documentElement.dataset.theme = 'dark'
+  else delete document.documentElement.dataset.theme
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_KEY, next)
+    } catch {}
+  }
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) meta.setAttribute('content', next === 'dark' ? '#151b19' : '#E7E9E2')
+  syncThemeButtons()
+}
+
+function syncThemeButtons() {
+  const theme = getTheme()
+  for (const button of els.themeButtons) {
+    button.setAttribute('aria-pressed', String(button.dataset.theme === theme))
   }
 }
 
@@ -225,6 +253,7 @@ function renderAll() {
   if (document.activeElement !== els.docTitle) els.docTitle.value = state.doc.title
   syncDocTitle()
   syncViewButtons()
+  syncThemeButtons()
   if (document.activeElement !== els.search && state.query !== els.search.value) els.search.value = state.query
   renderRail()
   renderTagFilter()
@@ -685,6 +714,9 @@ function bind() {
   }
   for (const button of els.viewButtons) {
     button.addEventListener('click', () => store.setViewMode(button.dataset.view))
+  }
+  for (const button of els.themeButtons) {
+    button.addEventListener('click', () => applyTheme(button.dataset.theme, { persist: true }))
   }
   window.addEventListener('concept:language', () => {
     applyStaticTranslations()

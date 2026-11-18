@@ -72,6 +72,10 @@ const messages = {
     'menu.reveal': 'Abrir carpeta de datos',
     'menu.help': 'Atajos y ayuda',
 
+    'theme.aria': 'Tema',
+    'theme.light': 'Tema claro',
+    'theme.dark': 'Tema oscuro',
+
     'lang.aria': 'Idioma',
 
     'canvas.emptyTitle': 'Un lienzo para pensar',
@@ -310,6 +314,10 @@ const messages = {
     'menu.import': 'Import a map',
     'menu.reveal': 'Open data folder',
     'menu.help': 'Shortcuts and help',
+
+    'theme.aria': 'Theme',
+    'theme.light': 'Light theme',
+    'theme.dark': 'Dark theme',
 
     'lang.aria': 'Language',
 
