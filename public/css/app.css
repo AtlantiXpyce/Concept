@@ -638,7 +638,6 @@ svg { display: block; }
   width: 0;
   height: 0;
   transform-origin: 0 0;
-  will-change: transform;
 }
 
 .edges {
@@ -766,36 +765,12 @@ svg { display: block; }
   text-shadow: 0 1px 2px rgba(20, 30, 26, 0.18);
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   overflow: hidden;
   overflow-wrap: anywhere;
+  max-width: 100%;
 }
 .node.node--graph[data-empty="title"] .node__title { color: rgba(255, 255, 255, 0.82); font-style: italic; }
-.node.node--graph .node__tags {
-  margin-top: 0;
-  justify-content: center;
-  gap: 2px;
-  max-width: 100%;
-  flex: 0 0 auto;
-}
-.node.node--graph .node__tag {
-  font-size: var(--graph-tag-size, 8px);
-  line-height: 1.35;
-  padding: 0 4px;
-  max-width: calc(100% - 2px);
-  border-color: rgba(255, 255, 255, 0.35);
-  background: color-mix(in srgb, var(--tag-color, var(--pine)) 78%, rgba(255, 255, 255, 0.18));
-  color: #fff;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
-}
-.node.node--graph .node__tag--more {
-  font-size: var(--graph-tag-size, 8px);
-  line-height: 1.35;
-  border-color: transparent;
-  background: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.92);
-  padding: 0 4px;
-}
 
 .node__spine {
   position: absolute;
@@ -831,16 +806,21 @@ svg { display: block; }
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
 }
 .node__desc {
   margin-top: 5px;
   font-size: 11.5px;
   line-height: 1.5;
-  color: var(--muted);
+  font-weight: 500;
+  color: var(--ink-3);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
 }
 .node__desc:empty { display: none; }
 .node__tags {
@@ -855,10 +835,13 @@ svg { display: block; }
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 9.5px;
+  font-weight: 500;
   line-height: 1.6;
   padding: 0 6px;
   border: 1px solid color-mix(in srgb, var(--tag-color, var(--pine)) 38%, var(--line));
   border-radius: 99px;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
   background: color-mix(in srgb, var(--tag-color, var(--pine)) 14%, var(--paper));
   color: var(--ink-2);
 }

@@ -19,18 +19,12 @@ function isGraphMode() {
 
 function graphDiameter(id) {
   const degree = store.linksOf(id).length
-  const concept = store.getConcept(id)
-  const hasTags = concept && store.tagsOf(concept).length > 0
-  const base = GRAPH_MIN + degree * GRAPH_STEP + (hasTags ? 14 : 0)
-  return clamp(base, hasTags ? 82 : GRAPH_MIN, GRAPH_MAX)
+  const base = GRAPH_MIN + degree * GRAPH_STEP
+  return clamp(base, GRAPH_MIN, GRAPH_MAX)
 }
 
 function graphTitleSize(d) {
   return clamp(Math.round(d * 0.155), 13, 24)
-}
-
-function graphTagSize(d) {
-  return clamp(Math.round(d * 0.09), 8, 12)
 }
 
 const els = {}
@@ -177,12 +171,9 @@ function buildNode(concept, index) {
     el.style.width = `${d}px`
     el.style.height = `${d}px`
     el.style.setProperty('--graph-title-size', `${graphTitleSize(d)}px`)
-    el.style.setProperty('--graph-tag-size', `${graphTagSize(d)}px`)
     const title = document.createElement('h3')
     title.className = 'node__title'
-    const tags = document.createElement('div')
-    tags.className = 'node__tags'
-    el.append(title, tags)
+    el.append(title)
   } else {
     const spine = document.createElement('span')
     spine.className = 'node__spine'
@@ -294,9 +285,8 @@ function paintNode(el, concept) {
     el.style.height = `${d}px`
     el.style.background = concept.color
     el.style.setProperty('--graph-title-size', `${graphTitleSize(d)}px`)
-    el.style.setProperty('--graph-tag-size', `${graphTagSize(d)}px`)
     const tags = el.querySelector('.node__tags')
-    if (tags) paintTags(tags, concept)
+    if (tags) tags.remove()
     const media = el.querySelector(':scope > .node__media')
     if (media) media.remove()
     return
